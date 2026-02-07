@@ -6,10 +6,13 @@ services:
       POSTGRES_DB: zikirhatmi
       POSTGRES_USER: zikirhatmi
       POSTGRES_PASSWORD: zikirhatmi
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     volumes:
       - zikirhatmi_db:/var/lib/postgresql/data
-    ports:
-      - "5431:5432"
 
   backend:
     build:
@@ -17,22 +20,23 @@ services:
     container_name: zikir-hatmi-backend
     environment:
       PORT: "8080"
-      DATABASE_URL: "postgres://zikirhatmi:zikirhatmi@db:5431/zikirhatmi?sslmode=disable"
+      DATABASE_URL: "postgres://zikirhatmi:zikirhatmi@db:5432/zikirhatmi?sslmode=disable"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
-      - "8971:8080"
+      - "8998:8080"
 
   frontend:
     build:
       context: ./zikir-hatmi-frontend
     container_name: zikir-hatmi-frontend
     environment:
-      VITE_PROXY_TARGET: "http://backend:8080"
+      VITE_PROXY_TARGET: "https://zikirhatmiapi.abapnews.tr"
     depends_on:
       - backend
     ports:
-      - "8972:5173"
+      - "8999:5173"
 
 volumes:
   zikirhatmi_db:
