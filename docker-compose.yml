@@ -17,7 +17,7 @@ services:
     container_name: zikir-hatmi-backend
     environment:
       PORT: "8080"
-      DATABASE_URL: "postgres://zikirhatmi:zikirhatmi@db:5431/zikirhatmi?sslmode=disable"
+      DATABASE_URL: "postgres://zikirhatmi:zikirhatmi@db:5432/zikirhatmi?sslmode=disable"
     depends_on:
       - db
     ports:
@@ -28,14 +28,11 @@ services:
       context: ./zikir-hatmi-frontend
     container_name: zikir-hatmi-frontend
     environment:
-      VITE_PROXY_TARGET: "http://backend:8971"
+      VITE_PROXY_TARGET: "http://backend:8080"
     depends_on:
       - backend
     ports:
       - "8972:5173"
-    volumes:
-      - ./zikir-hatmi-frontend:/app
-      - /app/node_modules
 
 volumes:
   zikirhatmi_db:
