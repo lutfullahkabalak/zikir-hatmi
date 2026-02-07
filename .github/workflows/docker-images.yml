@@ -1,6 +1,10 @@
 name: Docker Images
 
 on:
+  push:
+    branches: ["main"]
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       tag:
@@ -43,8 +47,9 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-backend
           tags: |
-            type=raw,value=${{ inputs.tag }}
+            type=raw,value=${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'latest' }}
             type=sha
+            type=ref,event=tag
 
       - name: Build & Push (backend)
         uses: docker/build-push-action@v6
@@ -62,8 +67,9 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-frontend
           tags: |
-            type=raw,value=${{ inputs.tag }}
+            type=raw,value=${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'latest' }}
             type=sha
+            type=ref,event=tag
 
       - name: Build & Push (frontend)
         uses: docker/build-push-action@v6
