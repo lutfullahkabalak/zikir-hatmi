@@ -7,6 +7,11 @@ import ui from '@nuxt/ui/vite'
 export default defineConfig({
   plugins: [vue(), tailwindcss(), ui()],
   server: {
+    allowedHosts: [
+      'zikirhatmi.abapnews.tr',
+      'localhost',
+      '127.0.0.1',
+    ],
     proxy: {
       '/hatims': {
         target: process.env.VITE_PROXY_TARGET || 'http://localhost:8080',
