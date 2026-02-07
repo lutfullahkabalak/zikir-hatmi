@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: zikir-hatmi-db
+    environment:
+      POSTGRES_DB: zikirhatmi
+      POSTGRES_USER: zikirhatmi
+      POSTGRES_PASSWORD: zikirhatmi
+    volumes:
+      - zikirhatmi_db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./zikir-hatmi-backend
+    container_name: zikir-hatmi-backend
+    environment:
+      PORT: "8080"
+      DATABASE_URL: "postgres://zikirhatmi:zikirhatmi@db:5432/zikirhatmi?sslmode=disable"
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./zikir-hatmi-frontend
+    container_name: zikir-hatmi-frontend
+    environment:
+      VITE_PROXY_TARGET: "http://backend:8080"
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./zikir-hatmi-frontend:/app
+      - /app/node_modules
+
+volumes:
+  zikirhatmi_db:
