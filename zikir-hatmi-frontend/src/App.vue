@@ -141,8 +141,8 @@ const submitCreate = async () => {
       v-model:open="createOpen"
       :overlay="true"
       :ui="{
-        overlay: 'bg-black/90 backdrop-blur-md',
-        content: '!bg-black text-white ring-1 ring-white/10 rounded-xl shadow-2xl',
+        overlay: 'z-[100] bg-black/90 backdrop-blur-md',
+        content: 'z-[110] !bg-black text-white ring-1 ring-white/10 rounded-xl shadow-2xl',
       }"
     >
       <template #content>
