@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useUsername } from './composables/useUsername'
 
 type CreateHatimResponse = {
   shareCode: string
@@ -12,11 +13,21 @@ const route = useRoute()
 const router = useRouter()
 
 const createOpen = ref(false)
+const usernameOpen = ref(false)
 const title = ref('')
 const target = ref(50)
 const password = ref('')
 const creating = ref(false)
 const createError = ref<string | null>(null)
+
+const { username, setUsername } = useUsername()
+const usernameDraft = ref('')
+
+watch(usernameOpen, (open) => {
+  if (open) {
+    usernameDraft.value = username.value || ''
+  }
+})
 
 const shareCode = computed(() => String(route.params.shareCode || ''))
 const shareLink = computed(() =>
@@ -24,6 +35,31 @@ const shareLink = computed(() =>
 )
 
 const canShare = computed(() => shareCode.value.length > 0)
+
+const menuItems = computed(() => [
+  [
+    {
+      label: 'Paylaş',
+      icon: 'i-lucide-share-2',
+      disabled: !canShare.value,
+      onSelect: copyShareLink,
+    },
+    {
+      label: 'Kullanıcı adı',
+      icon: 'i-lucide-user',
+      onSelect: () => {
+        usernameOpen.value = true
+      },
+    },
+    {
+      label: 'Yeni hatim',
+      icon: 'i-lucide-plus',
+      onSelect: () => {
+        createOpen.value = true
+      },
+    },
+  ],
+])
 
 const headerTitle = ref('')
 
@@ -92,23 +128,24 @@ const submitCreate = async () => {
     creating.value = false
   }
 }
+
+const submitUsername = () => {
+  setUsername(usernameDraft.value)
+  usernameOpen.value = false
+}
+
+const clearUsername = () => {
+  setUsername('')
+  usernameDraft.value = ''
+  usernameOpen.value = false
+}
 </script>
 
 <template>
   <UApp class="min-h-screen bg-transparent text-white">
     <main class="relative flex min-h-screen flex-col">
       <header class="sticky top-0 z-20 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-4 py-4">
-        <div class="flex items-center">
-          <UButton
-            v-if="canShare"
-            variant="ghost"
-            color="neutral"
-            size="sm"
-            icon="i-lucide-share-2"
-            @click="copyShareLink"
-          />
-          <div v-else class="w-16"></div>
-        </div>
+        <div class="w-9"></div>
 
         <p
           v-if="headerTitle"
@@ -120,13 +157,18 @@ const submitCreate = async () => {
         <div v-else></div>
 
         <div class="flex items-center justify-end">
-          <UButton
-            variant="ghost"
-            color="neutral"
-            size="sm"
-            icon="i-lucide-plus"
-            @click="createOpen = true"
-          />
+          <UDropdownMenu
+            :items="menuItems"
+            :content="{ align: 'end' }"
+          >
+            <UButton
+              variant="solid"
+              size="md"
+              icon="i-lucide-ellipsis-vertical"
+              aria-label="Menü"
+              class="bg-white text-slate-900 hover:bg-white/90"
+            />
+          </UDropdownMenu>
         </div>
       </header>
 
@@ -191,6 +233,45 @@ const submitCreate = async () => {
             <p v-if="createError" class="text-sm text-rose-300">
               {{ createError }}
             </p>
+          </div>
+        </div>
+      </template>
+    </UModal>
+
+    <UModal
+      v-model:open="usernameOpen"
+      :overlay="true"
+      :ui="{
+        overlay: 'z-[100] bg-black/90 backdrop-blur-md',
+        content: 'z-[110] !bg-black text-white ring-1 ring-white/10 rounded-xl shadow-2xl',
+      }"
+    >
+      <template #content>
+        <div class="rounded-xl bg-black p-6 text-white shadow-2xl ring-1 ring-white/10">
+          <div class="space-y-4">
+            <div>
+              <p class="text-xs uppercase tracking-[0.35em] text-white/50">Kullanıcı</p>
+              <h2 class="mt-3 text-xl font-semibold">Kullanıcı adın</h2>
+              <p class="mt-2 text-sm text-white/70">
+                Opsiyonel. Bu cihazda saklanır ve hatimde aktif kullanıcılar arasında görünür.
+              </p>
+            </div>
+
+            <UInput
+              v-model="usernameDraft"
+              type="text"
+              placeholder="Adınız (ör. Ahmet)"
+              size="lg"
+            />
+
+            <div class="flex items-center gap-2">
+              <UButton color="primary" size="lg" class="flex-1" @click="submitUsername">
+                Kaydet
+              </UButton>
+              <UButton color="neutral" variant="soft" size="lg" @click="clearUsername">
+                Temizle
+              </UButton>
+            </div>
           </div>
         </div>
       </template>

@@ -6,9 +6,11 @@ import (
 	"errors"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
+	"sort"
 	"strings"
 	"sync"
 	"syscall"
@@ -21,16 +23,26 @@ import (
 // hub coordinates websocket clients and broadcasts messages for a hatim.
 type hub struct {
 	mu        sync.RWMutex
-	clients   map[*websocket.Conn]struct{}
+	clients   map[*websocket.Conn]*clientInfo
 	shareCode string
 	db        *pgxpool.Pool
 	count     int
 	target    int
 }
 
+type clientInfo struct {
+	id   string
+	name string
+}
+
+type presenceUser struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 func newHub(db *pgxpool.Pool, shareCode string, count int, target int) *hub {
 	return &hub{
-		clients:   make(map[*websocket.Conn]struct{}),
+		clients:   make(map[*websocket.Conn]*clientInfo),
 		shareCode: shareCode,
 		db:        db,
 		count:     count,
@@ -38,19 +50,78 @@ func newHub(db *pgxpool.Pool, shareCode string, count int, target int) *hub {
 	}
 }
 
+func randomID() string {
+	const alphabet = "23456789abcdefghjkmnpqrstuvwxyz"
+	b := make([]byte, 8)
+	for i := range b {
+		b[i] = alphabet[rand.Intn(len(alphabet))]
+	}
+	return string(b)
+}
+
+func normalizeName(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return ""
+	}
+	if len([]rune(name)) > 24 {
+		r := []rune(name)
+		name = string(r[:24])
+	}
+	return name
+}
+
 func (h *hub) add(conn *websocket.Conn) {
 	h.mu.Lock()
-	h.clients[conn] = struct{}{}
+	h.clients[conn] = &clientInfo{id: randomID(), name: ""}
 	h.mu.Unlock()
 }
 
 func (h *hub) remove(conn *websocket.Conn) {
 	h.mu.Lock()
-	if _, ok := h.clients[conn]; ok {
-		delete(h.clients, conn)
-	}
+	delete(h.clients, conn)
 	h.mu.Unlock()
 	_ = conn.Close()
+}
+
+func (h *hub) setClientName(conn *websocket.Conn, name string) {
+	name = normalizeName(name)
+	h.mu.Lock()
+	if info, ok := h.clients[conn]; ok {
+		info.name = name
+	}
+	h.mu.Unlock()
+}
+
+func (h *hub) presenceSnapshot() []presenceUser {
+	h.mu.RLock()
+	users := make([]presenceUser, 0, len(h.clients))
+	for _, info := range h.clients {
+		name := normalizeName(info.name)
+		if name == "" {
+			name = "Misafir"
+		}
+		users = append(users, presenceUser{ID: info.id, Name: name})
+	}
+	h.mu.RUnlock()
+
+	sort.Slice(users, func(i, j int) bool {
+		if users[i].Name == users[j].Name {
+			return users[i].ID < users[j].ID
+		}
+		return users[i].Name < users[j].Name
+	})
+	return users
+}
+
+func (h *hub) broadcastPresence() {
+	users := h.presenceSnapshot()
+	payload, err := json.Marshal(Message{Type: "presence", Users: users})
+	if err != nil {
+		log.Printf("presence marshal error: %v", err)
+		return
+	}
+	h.broadcast(websocket.TextMessage, payload)
 }
 
 func (h *hub) broadcast(msgType int, payload []byte) {
@@ -136,9 +207,11 @@ var upgrader = websocket.Upgrader{
 }
 
 type Message struct {
-	Type   string `json:"type"`
-	Count  int    `json:"count,omitempty"`
-	Target int    `json:"target,omitempty"`
+	Type   string         `json:"type"`
+	Count  int            `json:"count,omitempty"`
+	Target int            `json:"target,omitempty"`
+	Name   string         `json:"name,omitempty"`
+	Users  []presenceUser `json:"users,omitempty"`
 }
 
 type createHatimRequest struct {
@@ -314,9 +387,11 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 
 		hb.add(conn)
 		log.Printf("client connected: %s", conn.RemoteAddr())
+		hb.broadcastPresence()
 
 		defer func() {
 			hb.remove(conn)
+			hb.broadcastPresence()
 			log.Printf("client disconnected: %s", conn.RemoteAddr())
 		}()
 
@@ -355,7 +430,14 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 				continue
 			}
 
-			if incoming.Type != "increment" {
+			switch incoming.Type {
+			case "increment":
+				// handled below
+			case "hello", "set_name":
+				hb.setClientName(conn, incoming.Name)
+				hb.broadcastPresence()
+				continue
+			default:
 				continue
 			}
 
@@ -401,6 +483,8 @@ func writeError(w http.ResponseWriter, status int, message string) {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

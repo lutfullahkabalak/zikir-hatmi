@@ -1,10 +1,16 @@
 import { onBeforeUnmount, ref, watch, type Ref } from 'vue'
 
+export type PresenceUser = { id: string; name: string }
+
 type ServerMessage =
   | { type: 'state'; count: number; target: number }
   | { type: 'completed' }
+  | { type: 'presence'; users: PresenceUser[] }
 
-type ClientMessage = { type: 'increment' }
+type ClientMessage =
+  | { type: 'increment' }
+  | { type: 'hello'; name?: string }
+  | { type: 'set_name'; name?: string }
 
 const getSocketUrl = (hatimId: string, token: string) => {
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
@@ -14,12 +20,14 @@ const getSocketUrl = (hatimId: string, token: string) => {
 type ZikirSocketOptions = {
   hatimId: Ref<string | null | undefined>
   token: Ref<string | null | undefined>
+  username?: Ref<string | null | undefined>
 }
 
-export const useZikirSocket = ({ hatimId, token }: ZikirSocketOptions) => {
+export const useZikirSocket = ({ hatimId, token, username }: ZikirSocketOptions) => {
   const count = ref(0)
   const target = ref(50)
   const connected = ref(false)
+  const activeUsers = ref<PresenceUser[]>([])
 
   let socket: WebSocket | null = null
   let reconnectTimer: number | null = null
@@ -52,9 +60,19 @@ export const useZikirSocket = ({ hatimId, token }: ZikirSocketOptions) => {
       if (message.type === 'completed') {
         count.value = target.value
       }
+      if (message.type === 'presence') {
+        activeUsers.value = Array.isArray(message.users) ? message.users : []
+      }
     } catch (error) {
       console.warn('WebSocket message parse error', error)
     }
+  }
+
+  const send = (payload: ClientMessage) => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      return
+    }
+    socket.send(JSON.stringify(payload))
   }
 
   const connect = () => {
@@ -71,12 +89,16 @@ export const useZikirSocket = ({ hatimId, token }: ZikirSocketOptions) => {
       connected.value = true
       retryAttempt = 0
       clearReconnect()
+
+      const name = username?.value?.trim()
+      send({ type: 'hello', name: name || undefined })
     })
 
     socket.addEventListener('message', handleMessage)
 
     socket.addEventListener('close', () => {
       connected.value = false
+      activeUsers.value = []
       if (manualClose) {
         manualClose = false
         return
@@ -91,11 +113,7 @@ export const useZikirSocket = ({ hatimId, token }: ZikirSocketOptions) => {
   }
 
   const increment = () => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      return
-    }
-    const payload: ClientMessage = { type: 'increment' }
-    socket.send(JSON.stringify(payload))
+    send({ type: 'increment' })
   }
 
   const disconnect = () => {
@@ -106,6 +124,7 @@ export const useZikirSocket = ({ hatimId, token }: ZikirSocketOptions) => {
       socket = null
     }
     connected.value = false
+    activeUsers.value = []
   }
 
   const setState = (nextCount: number, nextTarget: number) => {
@@ -120,12 +139,23 @@ export const useZikirSocket = ({ hatimId, token }: ZikirSocketOptions) => {
     }
   }, { immediate: true })
 
+  if (username) {
+    watch(username, (next) => {
+      if (!connected.value) {
+        return
+      }
+      const name = next?.trim()
+      send({ type: 'set_name', name: name || undefined })
+    })
+  }
+
   onBeforeUnmount(disconnect)
 
   return {
     count,
     target,
     connected,
+    activeUsers,
     increment,
     setState,
     disconnect,
