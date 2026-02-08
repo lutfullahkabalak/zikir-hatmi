@@ -32,7 +32,8 @@ services:
       context: ./zikir-hatmi-frontend
     container_name: zikir-hatmi-frontend
     environment:
-      VITE_PROXY_TARGET: "https://zikirhatmiapi.abapnews.tr"
+      # Local dev: proxy API + WebSocket to the backend service inside the compose network.
+      VITE_PROXY_TARGET: "http://backend:8080"
     depends_on:
       - backend
     ports:
