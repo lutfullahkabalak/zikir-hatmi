@@ -252,11 +252,15 @@ onBeforeUnmount(() => {
           <p class="text-xs uppercase tracking-[0.3em] text-white/40">
             {{ connected ? 'Canlı bağlantı' : 'Bağlanıyor...' }}
           </p>
+          <p v-if="isCompleted" class="text-sm font-semibold text-emerald-300">
+            Hatim tamamlandı.
+          </p>
 
           <button
             v-if="connected && activeUsers.length"
             type="button"
-            class="mt-2 flex items-center justify-center gap-2 rounded-full bg-white/5 px-3 py-2 text-left ring-1 ring-white/10 hover:bg-white/10"
+            class="mt-3 flex items-center justify-center rounded-full bg-white/5 px-3 py-2 ring-1 ring-white/10 hover:bg-white/10"
+            aria-label="Aktif kullanıcıları göster"
             @click="presenceOpen = true"
           >
             <div class="flex -space-x-2">
@@ -276,13 +280,7 @@ onBeforeUnmount(() => {
                 title="Tümünü gör"
               />
             </div>
-            <span class="text-xs text-white/60">
-              Aktif: <span class="text-white/80">{{ activeUsers.length }}</span>
-            </span>
           </button>
-          <p v-if="isCompleted" class="text-sm font-semibold text-emerald-300">
-            Hatim tamamlandı.
-          </p>
         </div>
       </div>
     </div>
