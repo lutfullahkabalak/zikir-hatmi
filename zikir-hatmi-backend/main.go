@@ -149,8 +149,15 @@ func (h *hub) setState(count int, target int) {
 	h.mu.Unlock()
 }
 
-func (h *hub) increment(ctx context.Context) (int, int, bool, error) {
-	count, target, completed, err := incrementHatim(ctx, h.db, h.shareCode)
+func (h *hub) increment(ctx context.Context, amount int) (int, int, bool, error) {
+	if amount <= 0 {
+		amount = 1
+	}
+	if amount > 1000 {
+		amount = 1000
+	}
+
+	count, target, completed, err := incrementHatim(ctx, h.db, h.shareCode, amount)
 	if err != nil {
 		return 0, 0, false, err
 	}
@@ -210,6 +217,7 @@ type Message struct {
 	Type   string         `json:"type"`
 	Count  int            `json:"count,omitempty"`
 	Target int            `json:"target,omitempty"`
+	Amount int            `json:"amount,omitempty"`
 	Name   string         `json:"name,omitempty"`
 	Users  []presenceUser `json:"users,omitempty"`
 }
@@ -441,7 +449,7 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 				continue
 			}
 
-			count, target, completed, err := hb.increment(r.Context())
+			count, target, completed, err := hb.increment(r.Context(), incoming.Amount)
 			if err != nil {
 				log.Printf("increment error: %v", err)
 				continue

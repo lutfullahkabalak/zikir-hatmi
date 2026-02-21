@@ -36,6 +36,8 @@ const { count, target, connected, activeUsers, increment, setState, disconnect }
   username,
 })
 
+const bulkIncrementOpen = ref(false)
+const bulkIncrementAmount = ref<number | null>(null)
 const presenceOpen = ref(false)
 const maxVisibleUsers = 4
 const visibleUsers = computed(() => activeUsers.value.slice(0, maxVisibleUsers))
@@ -159,6 +161,20 @@ const dismissCreatedBanner = async () => {
   }
 }
 
+const openBulkIncrementModal = () => {
+  bulkIncrementAmount.value = null
+  bulkIncrementOpen.value = true
+}
+
+const applyBulkIncrement = () => {
+  const amount = Number.isFinite(bulkIncrementAmount.value) ? Math.floor(Number(bulkIncrementAmount.value)) : 0
+  if (amount <= 0) {
+    return
+  }
+  increment(amount)
+  bulkIncrementOpen.value = false
+}
+
 watch(shareCode, () => {
   loadHatim()
 }, { immediate: true })
@@ -170,6 +186,14 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="relative flex w-full flex-1 items-center justify-center">
+    <UButton
+      icon="i-lucide-plus"
+      variant="solid"
+      class="fixed left-4 top-4 z-30 bg-white text-slate-900 hover:bg-white/90"
+      aria-label="Toplu zikir ekle"
+      :disabled="loading || joinLoading || !connected || isCompleted"
+      @click="openBulkIncrementModal"
+    />
 
     <div class="relative z-10 flex w-full max-w-2xl flex-col items-center gap-6">
 
@@ -284,6 +308,54 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
+
+    <UModal
+      v-model:open="bulkIncrementOpen"
+      :overlay="true"
+      :ui="{
+        overlay: 'z-[100] bg-black/90 backdrop-blur-md',
+        content: 'z-[110] !bg-black text-white ring-1 ring-white/10 rounded-xl shadow-2xl',
+      }"
+    >
+      <template #content>
+        <div class="rounded-xl bg-black p-6 text-white shadow-2xl ring-1 ring-white/10">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-xs uppercase tracking-[0.35em] text-white/50">Toplu ekleme</p>
+              <h2 class="mt-3 text-xl font-semibold">Zikire kaç tane eklenecek?</h2>
+            </div>
+            <UButton
+              variant="ghost"
+              color="neutral"
+              size="sm"
+              icon="i-lucide-x"
+              aria-label="Kapat"
+              @click="bulkIncrementOpen = false"
+            />
+          </div>
+
+          <UFormField class="mt-5" label="Eklenecek sayı">
+            <UInput
+              v-model.number="bulkIncrementAmount"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="Örn: 10"
+            />
+          </UFormField>
+
+          <div class="mt-5 flex justify-end">
+            <UButton
+              color="primary"
+              :disabled="!bulkIncrementAmount || bulkIncrementAmount < 1 || isCompleted"
+              @click="applyBulkIncrement"
+            >
+              Ekle
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
 
     <UModal
       v-model:open="presenceOpen"

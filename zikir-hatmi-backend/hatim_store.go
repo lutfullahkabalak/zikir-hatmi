@@ -142,15 +142,19 @@ func getHatimAuth(ctx context.Context, pool *pgxpool.Pool, shareCode string) (ha
 	return result, nil
 }
 
-func incrementHatim(ctx context.Context, pool *pgxpool.Pool, shareCode string) (int, int, bool, error) {
+func incrementHatim(ctx context.Context, pool *pgxpool.Pool, shareCode string, amount int) (int, int, bool, error) {
+	if amount <= 0 {
+		amount = 1
+	}
+
 	var count int
 	var target int
 	row := pool.QueryRow(ctx, `
 		UPDATE hatims
-		SET count = LEAST(count + 1, target), updated_at = NOW()
+		SET count = LEAST(count + $2, target), updated_at = NOW()
 		WHERE share_code = $1
 		RETURNING count, target
-	`, shareCode)
+	`, shareCode, amount)
 
 	if err := row.Scan(&count, &target); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

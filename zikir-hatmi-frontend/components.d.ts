@@ -19,6 +19,7 @@ declare module 'vue' {
     UButton: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Button.vue')['default']
     UCard: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Card.vue')['default']
     UDropdownMenu: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/DropdownMenu.vue')['default']
+    UFormField: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/FormField.vue')['default']
     UInput: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Input.vue')['default']
     UModal: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Modal.vue')['default']
   }

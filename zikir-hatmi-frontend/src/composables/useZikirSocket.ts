@@ -8,7 +8,7 @@ type ServerMessage =
   | { type: 'presence'; users: PresenceUser[] }
 
 type ClientMessage =
-  | { type: 'increment' }
+  | { type: 'increment'; amount?: number }
   | { type: 'hello'; name?: string }
   | { type: 'set_name'; name?: string }
 
@@ -112,8 +112,12 @@ export const useZikirSocket = ({ hatimId, token, username }: ZikirSocketOptions)
     })
   }
 
-  const increment = () => {
-    send({ type: 'increment' })
+  const increment = (amount = 1) => {
+    const nextAmount = Number.isFinite(amount) ? Math.floor(amount) : 1
+    if (nextAmount <= 0) {
+      return
+    }
+    send({ type: 'increment', amount: nextAmount })
   }
 
   const disconnect = () => {
