@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -46,6 +47,22 @@ type hatimState struct {
 	Count            int
 	Target           int
 	RequiresPassword bool
+}
+
+type hatimSummary struct {
+	ShareCode        string
+	Title            string
+	Count            int
+	Target           int
+	RequiresPassword bool
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+}
+
+type updateHatimInput struct {
+	Title  *string
+	Count  *int
+	Target *int
 }
 
 func createHatim(ctx context.Context, pool *pgxpool.Pool, title string, target int, password string) (hatim, string, error) {
@@ -164,6 +181,98 @@ func incrementHatim(ctx context.Context, pool *pgxpool.Pool, shareCode string, a
 	}
 
 	return count, target, count >= target, nil
+}
+
+func listHatims(ctx context.Context, pool *pgxpool.Pool) ([]hatimSummary, error) {
+	rows, err := pool.Query(ctx, `
+		SELECT share_code, title, count, target, password_hash, created_at, updated_at
+		FROM hatims
+		ORDER BY updated_at DESC, created_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]hatimSummary, 0)
+	for rows.Next() {
+		var item hatimSummary
+		var passwordHash *string
+		if err := rows.Scan(
+			&item.ShareCode,
+			&item.Title,
+			&item.Count,
+			&item.Target,
+			&passwordHash,
+			&item.CreatedAt,
+			&item.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		item.RequiresPassword = passwordHash != nil
+		items = append(items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+func updateHatim(ctx context.Context, pool *pgxpool.Pool, shareCode string, input updateHatimInput) (hatimState, error) {
+	title := input.Title
+	count := input.Count
+	target := input.Target
+
+	if title == nil && count == nil && target == nil {
+		return getHatimState(ctx, pool, shareCode)
+	}
+
+	row := pool.QueryRow(ctx, `
+		UPDATE hatims
+		SET
+			title = COALESCE($2, title),
+			target = CASE
+				WHEN $4::bool THEN GREATEST(COALESCE($3, target), 1)
+				ELSE target
+			END,
+			count = CASE
+				WHEN $5::bool AND $4::bool THEN LEAST(GREATEST(COALESCE($6, count), 0), GREATEST(COALESCE($3, target), 1))
+				WHEN $5::bool THEN LEAST(GREATEST(COALESCE($6, count), 0), target)
+				WHEN $4::bool THEN LEAST(count, GREATEST(COALESCE($3, target), 1))
+				ELSE count
+			END,
+			updated_at = NOW()
+		WHERE share_code = $1
+		RETURNING share_code, title, count, target, password_hash
+	`, shareCode, title, target, target != nil, count != nil, count)
+
+	var state hatimState
+	var passwordHash *string
+	if err := row.Scan(&state.ShareCode, &state.Title, &state.Count, &state.Target, &passwordHash); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return hatimState{}, errHatimNotFound
+		}
+		return hatimState{}, err
+	}
+
+	state.RequiresPassword = passwordHash != nil
+	return state, nil
+}
+
+func deleteHatim(ctx context.Context, pool *pgxpool.Pool, shareCode string) error {
+	cmd, err := pool.Exec(ctx, `
+		DELETE FROM hatims
+		WHERE share_code = $1
+	`, shareCode)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return errHatimNotFound
+	}
+	return nil
 }
 
 func createToken(ctx context.Context, pool *pgxpool.Pool, hatimID uuid.UUID) (string, error) {

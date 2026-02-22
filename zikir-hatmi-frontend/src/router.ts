@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import HatimView from './views/HatimView.vue'
 import JoinView from './views/JoinView.vue'
+import ManageView from './views/ManageView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,6 +23,11 @@ const router = createRouter({
       name: 'hatim-join',
       component: JoinView,
       props: true,
+    },
+    {
+      path: '/y',
+      name: 'manage',
+      component: ManageView,
     },
     {
       path: '/:pathMatch(.*)*',

@@ -228,6 +228,12 @@ type createHatimRequest struct {
 	Password string `json:"password"`
 }
 
+type updateHatimRequest struct {
+	Title  *string `json:"title"`
+	Count  *int    `json:"count"`
+	Target *int    `json:"target"`
+}
+
 type joinHatimRequest struct {
 	Password string `json:"password"`
 }
@@ -241,6 +247,28 @@ type hatimResponse struct {
 	Token            string `json:"token,omitempty"`
 }
 
+type hatimSummaryResponse struct {
+	ShareCode        string    `json:"shareCode"`
+	Title            string    `json:"title"`
+	Count            int       `json:"count"`
+	Target           int       `json:"target"`
+	RequiresPassword bool      `json:"requiresPassword"`
+	CreatedAt        time.Time `json:"createdAt"`
+	UpdatedAt        time.Time `json:"updatedAt"`
+}
+
+func (s *hubStore) get(shareCode string) *hub {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.hubs[shareCode]
+}
+
+func (s *hubStore) remove(shareCode string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.hubs, shareCode)
+}
+
 func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 	mux := http.NewServeMux()
 
@@ -249,32 +277,53 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 	})
 
 	mux.HandleFunc("/hatims", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
+		switch r.Method {
+		case http.MethodPost:
+			var payload createHatimRequest
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil && !errors.Is(err, io.EOF) {
+				writeError(w, http.StatusBadRequest, "invalid body")
+				return
+			}
+
+			created, token, err := createHatim(r.Context(), db, payload.Title, payload.Target, payload.Password)
+			if err != nil {
+				log.Printf("create hatim error: %v", err)
+				writeError(w, http.StatusInternalServerError, "unable to create hatim")
+				return
+			}
+
+			writeJSON(w, http.StatusCreated, hatimResponse{
+				ShareCode:        created.ShareCode,
+				Title:            created.Title,
+				Count:            created.Count,
+				Target:           created.Target,
+				RequiresPassword: created.PasswordHash != nil,
+				Token:            token,
+			})
+		case http.MethodGet:
+			items, err := listHatims(r.Context(), db)
+			if err != nil {
+				log.Printf("list hatims error: %v", err)
+				writeError(w, http.StatusInternalServerError, "unable to list hatims")
+				return
+			}
+
+			result := make([]hatimSummaryResponse, 0, len(items))
+			for _, item := range items {
+				result = append(result, hatimSummaryResponse{
+					ShareCode:        item.ShareCode,
+					Title:            item.Title,
+					Count:            item.Count,
+					Target:           item.Target,
+					RequiresPassword: item.RequiresPassword,
+					CreatedAt:        item.CreatedAt,
+					UpdatedAt:        item.UpdatedAt,
+				})
+			}
+			writeJSON(w, http.StatusOK, result)
+		default:
 			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
-			return
 		}
-
-		var payload createHatimRequest
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil && !errors.Is(err, io.EOF) {
-			writeError(w, http.StatusBadRequest, "invalid body")
-			return
-		}
-
-		created, token, err := createHatim(r.Context(), db, payload.Title, payload.Target, payload.Password)
-		if err != nil {
-			log.Printf("create hatim error: %v", err)
-			writeError(w, http.StatusInternalServerError, "unable to create hatim")
-			return
-		}
-
-		writeJSON(w, http.StatusCreated, hatimResponse{
-			ShareCode:        created.ShareCode,
-			Title:            created.Title,
-			Count:            created.Count,
-			Target:           created.Target,
-			RequiresPassword: created.PasswordHash != nil,
-			Token:            token,
-		})
 	})
 
 	mux.HandleFunc("/hatims/", func(w http.ResponseWriter, r *http.Request) {
@@ -292,29 +341,80 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 		}
 
 		if len(parts) == 1 {
-			if r.Method != http.MethodGet {
-				writeError(w, http.StatusMethodNotAllowed, "method not allowed")
-				return
-			}
-
-			state, err := getHatimState(r.Context(), db, shareCode)
-			if err != nil {
-				if errors.Is(err, errHatimNotFound) {
-					writeError(w, http.StatusNotFound, "hatim not found")
+			switch r.Method {
+			case http.MethodGet:
+				state, err := getHatimState(r.Context(), db, shareCode)
+				if err != nil {
+					if errors.Is(err, errHatimNotFound) {
+						writeError(w, http.StatusNotFound, "hatim not found")
+						return
+					}
+					log.Printf("get hatim error: %v", err)
+					writeError(w, http.StatusInternalServerError, "unable to fetch hatim")
 					return
 				}
-				log.Printf("get hatim error: %v", err)
-				writeError(w, http.StatusInternalServerError, "unable to fetch hatim")
-				return
-			}
 
-			writeJSON(w, http.StatusOK, hatimResponse{
-				ShareCode:        state.ShareCode,
-				Title:            state.Title,
-				Count:            state.Count,
-				Target:           state.Target,
-				RequiresPassword: state.RequiresPassword,
-			})
+				writeJSON(w, http.StatusOK, hatimResponse{
+					ShareCode:        state.ShareCode,
+					Title:            state.Title,
+					Count:            state.Count,
+					Target:           state.Target,
+					RequiresPassword: state.RequiresPassword,
+				})
+			case http.MethodPatch:
+				var payload updateHatimRequest
+				if err := json.NewDecoder(r.Body).Decode(&payload); err != nil && !errors.Is(err, io.EOF) {
+					writeError(w, http.StatusBadRequest, "invalid body")
+					return
+				}
+
+				state, err := updateHatim(r.Context(), db, shareCode, updateHatimInput{
+					Title:  payload.Title,
+					Count:  payload.Count,
+					Target: payload.Target,
+				})
+				if err != nil {
+					if errors.Is(err, errHatimNotFound) {
+						writeError(w, http.StatusNotFound, "hatim not found")
+						return
+					}
+					log.Printf("update hatim error: %v", err)
+					writeError(w, http.StatusInternalServerError, "unable to update hatim")
+					return
+				}
+
+				if hb := hubs.get(shareCode); hb != nil {
+					hb.setState(state.Count, state.Target)
+					statePayload, err := json.Marshal(Message{Type: "state", Count: state.Count, Target: state.Target})
+					if err == nil {
+						hb.broadcast(websocket.TextMessage, statePayload)
+					}
+				}
+
+				writeJSON(w, http.StatusOK, hatimResponse{
+					ShareCode:        state.ShareCode,
+					Title:            state.Title,
+					Count:            state.Count,
+					Target:           state.Target,
+					RequiresPassword: state.RequiresPassword,
+				})
+			case http.MethodDelete:
+				err := deleteHatim(r.Context(), db, shareCode)
+				if err != nil {
+					if errors.Is(err, errHatimNotFound) {
+						writeError(w, http.StatusNotFound, "hatim not found")
+						return
+					}
+					log.Printf("delete hatim error: %v", err)
+					writeError(w, http.StatusInternalServerError, "unable to delete hatim")
+					return
+				}
+
+				hubs.remove(shareCode)
+				writeJSON(w, http.StatusNoContent, nil)
+			default:
+				writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+			}
 			return
 		}
 
