@@ -142,14 +142,14 @@ const clearUsername = () => {
 </script>
 
 <template>
-  <UApp class="min-h-screen bg-transparent text-white">
+  <UApp class="ramadan-app min-h-screen bg-transparent">
     <main class="relative flex min-h-screen flex-col">
       <header class="sticky top-0 z-20 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-4 py-4">
         <div class="w-9"></div>
 
         <p
           v-if="headerTitle"
-          class="truncate text-center text-lg font-semibold text-white/90"
+          class="truncate text-center text-lg font-semibold text-slate-900 dark:text-white/90"
           :title="headerTitle"
         >
           {{ headerTitle }}

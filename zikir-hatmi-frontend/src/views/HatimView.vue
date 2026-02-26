@@ -200,8 +200,8 @@ onBeforeUnmount(() => {
       <UCard v-if="showCreatedBanner" class="w-full bg-transparent">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p class="text-sm font-semibold text-white">Paylaşım bağlantısı hazır</p>
-            <p class="text-xs text-white/60">{{ createdLink }}</p>
+            <p class="text-sm font-semibold text-slate-900 dark:text-white">Paylaşım bağlantısı hazır</p>
+            <p class="text-xs text-slate-700 dark:text-white/60">{{ createdLink }}</p>
           </div>
           <div class="flex items-center gap-2">
             <UButton color="primary" variant="soft" @click="copyCreatedLink">
@@ -227,7 +227,7 @@ onBeforeUnmount(() => {
         <div class="flex flex-col items-center gap-4">
           <div class="text-center">
             <p class="text-5xl font-semibold tracking-tight md:text-6xl">{{ count }}</p>
-            <p class="text-sm uppercase tracking-[0.35em] text-white/50">zikir</p>
+            <p class="text-sm uppercase tracking-[0.35em] text-slate-700/80 dark:text-white/50">zikir</p>
           </div>
 
           <div class="relative flex items-center justify-center">
@@ -270,10 +270,10 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="mt-6 flex flex-col items-center gap-2 text-center">
-          <p class="text-sm text-white/70">
-            Hedef: <span class="font-semibold text-white">{{ target }}</span>
+          <p class="text-sm text-slate-700 dark:text-white/70">
+            Hedef: <span class="font-semibold text-slate-900 dark:text-white">{{ target }}</span>
           </p>
-          <p class="text-xs uppercase tracking-[0.3em] text-white/40">
+          <p class="text-xs uppercase tracking-[0.3em] text-slate-700/70 dark:text-white/40">
             {{ connected ? 'Canlı bağlantı' : 'Bağlanıyor...' }}
           </p>
           <p v-if="isCompleted" class="text-sm font-semibold text-emerald-300">

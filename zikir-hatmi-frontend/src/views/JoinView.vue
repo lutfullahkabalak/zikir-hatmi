@@ -60,9 +60,9 @@ const submit = async () => {
     <UCard class="w-full max-w-md bg-white/5">
       <div class="space-y-4">
         <div>
-          <p class="text-xs uppercase tracking-[0.35em] text-white/50">Zikir Hatmi</p>
+          <p class="text-xs uppercase tracking-[0.35em] text-slate-700/80 dark:text-white/50">Zikir Hatmi</p>
           <h1 class="mt-3 text-2xl font-semibold">Şifre ile katıl</h1>
-          <p class="mt-2 text-sm text-white/70">
+          <p class="mt-2 text-sm text-slate-700 dark:text-white/70">
             Bu hatime katılmak için şifre girmeniz gerekiyor.
           </p>
         </div>

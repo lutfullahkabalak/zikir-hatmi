@@ -178,7 +178,7 @@ onMounted(() => {
   <div class="mx-auto w-full max-w-5xl space-y-4">
     <div class="flex items-center justify-between gap-3">
       <div>
-        <p class="text-xs uppercase tracking-[0.35em] text-white/50">Yönetim</p>
+        <p class="text-xs uppercase tracking-[0.35em] text-slate-700/80 dark:text-white/50">Yönetim</p>
         <h1 class="mt-2 text-2xl font-semibold">Hatim paneli</h1>
       </div>
       <UButton color="primary" :loading="loading" @click="loadHatims">
@@ -194,7 +194,7 @@ onMounted(() => {
     />
 
     <UCard v-if="!loading && !hasItems" class="bg-white/5">
-      <p class="text-sm text-white/70">Kayıtlı hatim yok.</p>
+      <p class="text-sm text-slate-700 dark:text-white/70">Kayıtlı hatim yok.</p>
     </UCard>
 
     <div class="space-y-3">
@@ -205,10 +205,10 @@ onMounted(() => {
       >
         <div class="space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <p class="text-sm font-semibold text-white">
+            <p class="text-sm font-semibold text-slate-900 dark:text-white">
               {{ item.shareCode }}
             </p>
-            <div class="flex items-center gap-2 text-xs text-white/60">
+            <div class="flex items-center gap-2 text-xs text-slate-700 dark:text-white/60">
               <span>{{ formatDate(item.updatedAt) }}</span>
               <UBadge color="neutral" variant="soft">
                 {{ item.requiresPassword ? 'Şifreli' : 'Açık' }}
@@ -267,7 +267,7 @@ onMounted(() => {
             </UButton>
           </div>
 
-          <p class="text-xs text-white/50">
+          <p class="text-xs text-slate-700/80 dark:text-white/50">
             Oluşturulma: {{ formatDate(item.createdAt) }} · Link: {{ shareLink(item.shareCode) }}
           </p>
         </div>
