@@ -16,10 +16,20 @@ const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const savingCode = ref<string | null>(null)
 const deletingCode = ref<string | null>(null)
+const adminKey = ref('')
+const authenticated = ref(false)
 
 const editState = ref<Record<string, { title: string; count: number; target: number }>>({})
 
 const hasItems = computed(() => items.value.length > 0)
+
+const getAuthHeaders = (): HeadersInit => {
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (adminKey.value) {
+    headers['Authorization'] = `Bearer ${adminKey.value}`
+  }
+  return headers
+}
 
 const ensureDraft = (shareCode: string) => {
   if (!editState.value[shareCode]) {
@@ -70,18 +80,31 @@ const hydrateEditState = (source: HatimSummary[]) => {
 }
 
 const loadHatims = async () => {
+  if (!adminKey.value) {
+    errorMessage.value = 'Admin anahtarı gerekli.'
+    return
+  }
+
   loading.value = true
   errorMessage.value = null
 
   try {
-    const response = await fetch('/hatims')
+    const response = await fetch('/hatims', {
+      headers: getAuthHeaders(),
+    })
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        errorMessage.value = 'Geçersiz admin anahtarı.'
+        authenticated.value = false
+        return
+      }
       errorMessage.value = 'Hatimler alınamadı.'
       return
     }
     const data = (await response.json()) as HatimSummary[]
     hydrateEditState(data)
     items.value = data
+    authenticated.value = true
   } catch {
     errorMessage.value = 'Hatimler alınamadı.'
   } finally {
@@ -101,7 +124,7 @@ const saveHatim = async (shareCode: string) => {
   try {
     const response = await fetch(`/hatims/${shareCode}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         title: draft.title.trim(),
         count: Math.max(0, Math.floor(Number(draft.count) || 0)),
@@ -110,6 +133,10 @@ const saveHatim = async (shareCode: string) => {
     })
 
     if (!response.ok) {
+      if (response.status === 401) {
+        errorMessage.value = 'Yetkilendirme hatası. Token gerekli.'
+        return
+      }
       errorMessage.value = 'Hatim güncellenemedi.'
       return
     }
@@ -143,9 +170,14 @@ const deleteHatim = async (shareCode: string) => {
   try {
     const response = await fetch(`/hatims/${shareCode}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     })
 
     if (!response.ok) {
+      if (response.status === 401) {
+        errorMessage.value = 'Yetkilendirme hatası. Token gerekli.'
+        return
+      }
       errorMessage.value = 'Hatim silinemedi.'
       return
     }
@@ -170,7 +202,7 @@ const copyLink = async (shareCode: string) => {
 }
 
 onMounted(() => {
-  loadHatims()
+  // Don't auto-load, require authentication first
 })
 </script>
 
@@ -181,10 +213,32 @@ onMounted(() => {
         <p class="text-xs uppercase tracking-[0.35em] text-slate-700/80 dark:text-white/50">Yönetim</p>
         <h1 class="mt-2 text-2xl font-semibold">Hatim paneli</h1>
       </div>
-      <UButton color="primary" :loading="loading" @click="loadHatims">
+      <UButton v-if="authenticated" color="primary" :loading="loading" @click="loadHatims">
         Yenile
       </UButton>
     </div>
+
+    <!-- Authentication form -->
+    <UCard v-if="!authenticated" class="bg-white/5">
+      <div class="space-y-4">
+        <p class="text-sm text-slate-700 dark:text-white/70">
+          Bu panele erişmek için admin anahtarı gereklidir.
+        </p>
+        <UInput
+          v-model="adminKey"
+          type="password"
+          placeholder="Admin anahtarı"
+          size="lg"
+        />
+        <UButton
+          color="primary"
+          :loading="loading"
+          @click="loadHatims"
+        >
+          Giriş
+        </UButton>
+      </div>
+    </UCard>
 
     <UAlert
       v-if="errorMessage"
@@ -193,11 +247,11 @@ onMounted(() => {
       :title="errorMessage"
     />
 
-    <UCard v-if="!loading && !hasItems" class="bg-white/5">
+    <UCard v-if="authenticated && !loading && !hasItems" class="bg-white/5">
       <p class="text-sm text-slate-700 dark:text-white/70">Kayıtlı hatim yok.</p>
     </UCard>
 
-    <div class="space-y-3">
+    <div v-if="authenticated" class="space-y-3">
       <UCard
         v-for="item in items"
         :key="item.shareCode"

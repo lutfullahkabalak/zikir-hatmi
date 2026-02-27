@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	crand "crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -50,11 +51,25 @@ func newHub(db *pgxpool.Pool, shareCode string, count int, target int) *hub {
 	}
 }
 
+var fallbackCounter uint64
+
 func randomID() string {
 	const alphabet = "23456789abcdefghjkmnpqrstuvwxyz"
 	b := make([]byte, 8)
+	randomBytes := make([]byte, 8)
+	if _, err := crand.Read(randomBytes); err != nil {
+		// Fallback to time-based unique ID if crypto/rand fails
+		log.Printf("crypto/rand error: %v", err)
+		fallbackCounter++
+		ts := time.Now().UnixNano()
+		fallbackID := fmt.Sprintf("%x%x", ts, fallbackCounter)
+		if len(fallbackID) > 8 {
+			return fallbackID[:8]
+		}
+		return fallbackID
+	}
 	for i := range b {
-		b[i] = alphabet[rand.Intn(len(alphabet))]
+		b[i] = alphabet[int(randomBytes[i])%len(alphabet)]
 	}
 	return string(b)
 }
@@ -204,12 +219,116 @@ func (s *hubStore) getOrCreate(ctx context.Context, shareCode string) (*hub, err
 	return created, nil
 }
 
+// rateLimiter provides simple rate limiting for authentication attempts
+type rateLimiter struct {
+	mu       sync.Mutex
+	attempts map[string][]time.Time
+	limit    int           // max attempts
+	window   time.Duration // time window
+}
+
+func newRateLimiter(limit int, window time.Duration) *rateLimiter {
+	return &rateLimiter{
+		attempts: make(map[string][]time.Time),
+		limit:    limit,
+		window:   window,
+	}
+}
+
+func (rl *rateLimiter) allow(key string) bool {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+
+	now := time.Now()
+	cutoff := now.Add(-rl.window)
+
+	// Remove old attempts
+	filtered := make([]time.Time, 0)
+	for _, t := range rl.attempts[key] {
+		if t.After(cutoff) {
+			filtered = append(filtered, t)
+		}
+	}
+
+	if len(filtered) >= rl.limit {
+		rl.attempts[key] = filtered
+		return false
+	}
+
+	rl.attempts[key] = append(filtered, now)
+	return true
+}
+
+// trustProxy controls whether to trust X-Forwarded-For headers.
+// Set TRUST_PROXY=true when running behind a trusted reverse proxy.
+var trustProxy = os.Getenv("TRUST_PROXY") == "true"
+
+func getClientIP(r *http.Request) string {
+	// Only trust proxy headers if explicitly configured
+	if trustProxy {
+		// Check X-Forwarded-For header (for proxied requests)
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			// Take the first IP in the list (client IP as added by the first proxy)
+			if idx := strings.Index(xff, ","); idx != -1 {
+				return strings.TrimSpace(xff[:idx])
+			}
+			return strings.TrimSpace(xff)
+		}
+		// Check X-Real-IP header
+		if xri := r.Header.Get("X-Real-IP"); xri != "" {
+			return xri
+		}
+	}
+	// Fall back to RemoteAddr (direct connection IP)
+	if idx := strings.LastIndex(r.RemoteAddr, ":"); idx != -1 {
+		return r.RemoteAddr[:idx]
+	}
+	return r.RemoteAddr
+}
+
+var allowedOrigins = parseAllowedOrigins()
+
+func parseAllowedOrigins() map[string]bool {
+	origins := make(map[string]bool)
+	// Default allowed origins for development
+	origins["localhost"] = true
+	origins["127.0.0.1"] = true
+
+	// Parse ALLOWED_ORIGINS environment variable (comma-separated)
+	if envOrigins := os.Getenv("ALLOWED_ORIGINS"); envOrigins != "" {
+		for _, origin := range strings.Split(envOrigins, ",") {
+			origin = strings.TrimSpace(origin)
+			if origin != "" {
+				origins[origin] = true
+			}
+		}
+	}
+	return origins
+}
+
+func checkOrigin(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		// Allow requests without Origin header (same-origin requests)
+		return true
+	}
+
+	// Parse the origin URL to extract the host
+	// Origin format: scheme://host[:port]
+	origin = strings.TrimPrefix(origin, "http://")
+	origin = strings.TrimPrefix(origin, "https://")
+	// Remove port if present
+	if colonIdx := strings.Index(origin, ":"); colonIdx != -1 {
+		origin = origin[:colonIdx]
+	}
+
+	return allowedOrigins[origin]
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true // Simplify local development; tighten for production.
-	},
+	CheckOrigin:     checkOrigin,
 	EnableCompression: true,
 }
 
@@ -272,6 +391,9 @@ func (s *hubStore) remove(shareCode string) {
 func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 	mux := http.NewServeMux()
 
+	// Rate limiter: 10 join attempts per minute per IP
+	joinLimiter := newRateLimiter(10, time.Minute)
+
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
@@ -301,6 +423,18 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 				Token:            token,
 			})
 		case http.MethodGet:
+			// Require admin key for listing all hatims
+			adminKey := os.Getenv("ADMIN_KEY")
+			if adminKey == "" {
+				writeError(w, http.StatusForbidden, "admin listing disabled")
+				return
+			}
+			providedKey := extractBearerToken(r)
+			if providedKey != adminKey {
+				writeError(w, http.StatusUnauthorized, "invalid admin key")
+				return
+			}
+
 			items, err := listHatims(r.Context(), db)
 			if err != nil {
 				log.Printf("list hatims error: %v", err)
@@ -362,6 +496,19 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 					RequiresPassword: state.RequiresPassword,
 				})
 			case http.MethodPatch:
+				// Require valid token for updates
+				token := extractBearerToken(r)
+				ok, err := validateToken(r.Context(), db, shareCode, token)
+				if err != nil {
+					log.Printf("token validation error: %v", err)
+					writeError(w, http.StatusInternalServerError, "unable to validate token")
+					return
+				}
+				if !ok {
+					writeError(w, http.StatusUnauthorized, "invalid or missing token")
+					return
+				}
+
 				var payload updateHatimRequest
 				if err := json.NewDecoder(r.Body).Decode(&payload); err != nil && !errors.Is(err, io.EOF) {
 					writeError(w, http.StatusBadRequest, "invalid body")
@@ -399,7 +546,20 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 					RequiresPassword: state.RequiresPassword,
 				})
 			case http.MethodDelete:
-				err := deleteHatim(r.Context(), db, shareCode)
+				// Require valid token for deletion
+				token := extractBearerToken(r)
+				ok, err := validateToken(r.Context(), db, shareCode, token)
+				if err != nil {
+					log.Printf("token validation error: %v", err)
+					writeError(w, http.StatusInternalServerError, "unable to validate token")
+					return
+				}
+				if !ok {
+					writeError(w, http.StatusUnauthorized, "invalid or missing token")
+					return
+				}
+
+				err = deleteHatim(r.Context(), db, shareCode)
 				if err != nil {
 					if errors.Is(err, errHatimNotFound) {
 						writeError(w, http.StatusNotFound, "hatim not found")
@@ -421,6 +581,14 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 		if len(parts) == 2 && parts[1] == "join" {
 			if r.Method != http.MethodPost {
 				writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+				return
+			}
+
+			// Rate limit join attempts to prevent brute force attacks
+			// Using "/" as delimiter since shareCode is base32 encoded (no "/" chars)
+			clientIP := getClientIP(r)
+			if !joinLimiter.allow(clientIP + "/" + shareCode) {
+				writeError(w, http.StatusTooManyRequests, "too many attempts, please try again later")
 				return
 			}
 
@@ -575,6 +743,18 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 	return mux
 }
 
+func extractBearerToken(r *http.Request) string {
+	auth := r.Header.Get("Authorization")
+	if auth == "" {
+		return ""
+	}
+	const prefix = "Bearer "
+	if len(auth) < len(prefix) || auth[:len(prefix)] != prefix {
+		return ""
+	}
+	return auth[len(prefix):]
+}
+
 func writeJSON(w http.ResponseWriter, status int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -591,8 +771,6 @@ func writeError(w http.ResponseWriter, status int, message string) {
 }
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
