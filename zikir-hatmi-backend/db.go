@@ -56,12 +56,19 @@ func ensureSchema(ctx context.Context, pool *pgxpool.Pool) error {
 		CREATE TABLE IF NOT EXISTS hatim_tokens (
 			token TEXT PRIMARY KEY,
 			hatim_id UUID NOT NULL REFERENCES hatims(id) ON DELETE CASCADE,
-			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '30 days')
 		);
 
 		-- migration: add title column if missing
 		DO $$ BEGIN
 			ALTER TABLE hatims ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT '';
+		EXCEPTION WHEN others THEN NULL;
+		END $$;
+
+		-- migration: add expires_at column to hatim_tokens if missing
+		DO $$ BEGIN
+			ALTER TABLE hatim_tokens ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '30 days');
 		EXCEPTION WHEN others THEN NULL;
 		END $$;
 	`)

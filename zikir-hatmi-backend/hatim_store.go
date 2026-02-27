@@ -281,10 +281,13 @@ func createToken(ctx context.Context, pool *pgxpool.Pool, hatimID uuid.UUID) (st
 		return "", err
 	}
 
+	// Token expires in 30 days
+	expiresAt := time.Now().Add(30 * 24 * time.Hour)
+
 	_, err = pool.Exec(ctx, `
-		INSERT INTO hatim_tokens (token, hatim_id)
-		VALUES ($1, $2)
-	`, token, hatimID)
+		INSERT INTO hatim_tokens (token, hatim_id, expires_at)
+		VALUES ($1, $2, $3)
+	`, token, hatimID, expiresAt)
 	if err != nil {
 		return "", err
 	}
@@ -302,6 +305,7 @@ func validateToken(ctx context.Context, pool *pgxpool.Pool, shareCode string, to
 		FROM hatim_tokens t
 		JOIN hatims h ON h.id = t.hatim_id
 		WHERE t.token = $1 AND h.share_code = $2
+		AND (t.expires_at IS NULL OR t.expires_at > NOW())
 	`, token, shareCode)
 
 	var exists int
