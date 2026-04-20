@@ -228,7 +228,6 @@ onBeforeUnmount(() => {
         <div class="flex flex-col items-center gap-4">
           <div class="text-center">
             <p class="text-5xl font-semibold tracking-tight md:text-6xl">{{ count }}</p>
-            <p class="text-sm uppercase tracking-[0.35em] text-slate-700/80 dark:text-white/50">zikir</p>
           </div>
 
           <div class="relative flex items-center justify-center">

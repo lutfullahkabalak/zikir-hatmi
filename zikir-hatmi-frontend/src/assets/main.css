@@ -6,8 +6,6 @@
   --ramadan-bg: #fff5f7;
   --ramadan-ink: #111111;
   --ramadan-text: #141414;
-  --ramadan-crescent: url("/ramadan/crescent-black.svg");
-  --ramadan-star: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 2.5 14.7 8l6.1.9-4.4 4.3 1 6.1L12 16.5 6.6 19.3l1-6.1L3.2 8.9 9.3 8 12 2.5Z'/%3E%3C/svg%3E");
 }
 
 @media (prefers-color-scheme: dark) {
@@ -15,8 +13,6 @@
     --ramadan-bg: #08070d;
     --ramadan-ink: #f7f2f4;
     --ramadan-text: #f7f2f4;
-    --ramadan-crescent: url("/ramadan/crescent-gold.svg");
-    --ramadan-star: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23d4af37' d='M12 2.5 14.7 8l6.1.9-4.4 4.3 1 6.1L12 16.5 6.6 19.3l1-6.1L3.2 8.9 9.3 8 12 2.5Z'/%3E%3C/svg%3E");
   }
 }
 
@@ -26,46 +22,11 @@ body {
   min-height: 100vh;
   background: var(--ramadan-bg);
   color: var(--ramadan-text);
-  position: relative;
   overflow-x: hidden;
-}
-
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-}
-
-body::before {
-  z-index: 0;
-  background-image: var(--ramadan-crescent);
-  background-repeat: no-repeat;
-  background-position: 12% 14%;
-  background-size: clamp(88px, 11vw, 150px);
-}
-
-body::after {
-  z-index: 0;
-  background-image:
-    var(--ramadan-star),
-    var(--ramadan-star),
-    var(--ramadan-star),
-    var(--ramadan-star),
-    var(--ramadan-star),
-    var(--ramadan-star),
-    var(--ramadan-star);
-  background-repeat: no-repeat;
-  background-size: 14px 14px, 12px 12px, 10px 10px, 13px 13px, 11px 11px, 9px 9px, 12px 12px;
-  background-position: 21% 18%, 37% 36%, 54% 24%, 70% 50%, 84% 31%, 28% 64%, 62% 76%;
-  filter: drop-shadow(0 0 1px color-mix(in srgb, var(--ramadan-ink) 45%, transparent));
 }
 
 #app {
   min-height: 100vh;
-  position: relative;
-  z-index: 1;
 }
 
 .ramadan-app {
