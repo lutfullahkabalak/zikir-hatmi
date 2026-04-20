@@ -73,6 +73,22 @@ GHCR image isimleri:
 - `ghcr.io/<owner>/<repo>-backend:<tag>`
 - `ghcr.io/<owner>/<repo>-frontend:<tag>`
 
+## Portainer / Üretim (GHCR Imajları)
+Üretim ortamında (örn. Raspberry Pi üstünde Portainer) imajları build etmek yerine GHCR'den çekmek için `docker-compose.portainer.yml` kullanılabilir.
+
+Portainer → **Stacks** → **Add stack** → **Repository** veya **Web editor** ile bu dosyayı yükleyin.
+
+İsteğe bağlı environment variable'lar:
+- `IMAGE_TAG` (default: `latest`)
+- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+- `BACKEND_PORT` (default: `8998`), `FRONTEND_PORT` (default: `8999`)
+
+Imajlar:
+- `ghcr.io/lutfullahkabalak/zikir-hatmi-backend:<tag>`
+- `ghcr.io/lutfullahkabalak/zikir-hatmi-frontend:<tag>`
+
+Stack, servisleri sırayla ayağa kaldırır: önce `db` (healthcheck geçene kadar beklenir), sonra `backend` (healthcheck geçene kadar beklenir), en son `frontend`. Ayrıca backend DB'ye bağlanamazsa hemen düşmez, db hazır olana kadar geri çekilerek tekrar dener.
+
 ## Notlar
 - Üretimde çalıştırırken `DATABASE_URL` değerini güvenli şekilde sağlayın.
 - Port çakışması yaşarsanız (örn. 8080/5173), o portu kullanan süreci kapatın veya compose portlarını değiştirin.

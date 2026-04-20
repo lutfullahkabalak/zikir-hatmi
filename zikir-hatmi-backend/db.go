@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -20,16 +21,49 @@ func initDB(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	pool, err := pgxpool.NewWithConfig(ctx, config)
-	if err != nil {
-		return nil, err
-	}
+	// Wait for the database to become reachable. Postgres inside a
+	// freshly-started compose/Portainer stack can take several seconds to
+	// accept connections even after the container is up. Rather than failing
+	// fast (which would crash the backend and send it into a restart loop),
+	// we retry with a bounded backoff so the backend can wait for the db to
+	// finish its initialisation.
+	maxWait := 120 * time.Second
+	deadline := time.Now().Add(maxWait)
+	backoff := 500 * time.Millisecond
+	const maxBackoff = 5 * time.Second
 
-	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	if err := pool.Ping(pingCtx); err != nil {
-		pool.Close()
-		return nil, err
+	var pool *pgxpool.Pool
+	for {
+		pool, err = pgxpool.NewWithConfig(ctx, config)
+		if err == nil {
+			pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			err = pool.Ping(pingCtx)
+			cancel()
+			if err == nil {
+				break
+			}
+			pool.Close()
+		}
+
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+
+		if time.Now().After(deadline) {
+			return nil, err
+		}
+
+		log.Printf("database not ready yet (%v), retrying in %s", err, backoff)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(backoff):
+		}
+
+		backoff *= 2
+		if backoff > maxBackoff {
+			backoff = maxBackoff
+		}
 	}
 
 	if err := ensureSchema(ctx, pool); err != nil {
