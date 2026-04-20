@@ -143,8 +143,8 @@ const clearUsername = () => {
 </script>
 
 <template>
-  <UApp class="ramadan-app min-h-screen bg-transparent">
-    <main class="relative flex min-h-screen flex-col">
+  <UApp class="ramadan-app min-h-dvh bg-transparent">
+    <main class="relative flex min-h-dvh flex-col">
       <header class="sticky top-0 z-20 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-4 py-4">
         <div class="w-9"></div>
 
@@ -173,8 +173,8 @@ const clearUsername = () => {
         </div>
       </header>
 
-      <div class="flex flex-1 px-6 py-10">
-        <div class="flex-1 bg-transparent">
+      <div class="flex flex-1 flex-col px-4 py-4 sm:px-6 sm:py-10">
+        <div class="flex flex-1 flex-col bg-transparent">
           <RouterView />
         </div>
       </div>

@@ -186,7 +186,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="relative flex w-full flex-1 items-center justify-center">
+  <div class="relative flex w-full flex-1 flex-col items-center justify-center">
     <UButton
       icon="i-lucide-plus"
       variant="solid"
