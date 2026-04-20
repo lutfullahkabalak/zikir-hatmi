@@ -13,7 +13,7 @@ export const wsUrl = (path: string): string => {
   const normalized = path.startsWith('/') ? path : `/${path}`
 
   if (apiBase) {
-    const wsBase = apiBase.replace(/^http(s?):\/\//i, (_, s) => `ws${s}://`)
+    const wsBase = apiBase.replace(/^http(s?):\/\//i, (_match: string, s: string) => `ws${s}://`)
     return `${wsBase}${normalized}`
   }
 
