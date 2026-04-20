@@ -56,36 +56,41 @@ npm run dev
 - `GET /ws/{shareCode}?token=...` → hatime özel WebSocket
 
 ## GitHub Actions
-Workflow dosyası: `.github/workflows/ci.yml`
+Workflow'lar:
+- `.github/workflows/ci.yml` → Go build/test + Frontend build (her push/PR)
+- `.github/workflows/docker-images.yml` → Multi-arch Docker image build + GHCR push
 
-- Push/PR: Go build/test + Frontend build
-- **Manuel**: Docker image build/push (GHCR)
-  - GitHub → Actions → **CI** → **Run workflow**
-  - `tag` input’u ile image tag seçebilirsiniz (default `latest`)
+Docker images workflow şunlarda çalışır:
+- `main`'e `zikir-hatmi-backend/`, `zikir-hatmi-frontend/` veya workflow dosyası değiştiğinde push → otomatik
+- Manuel olarak: GitHub → Actions → **Docker Images** → **Run workflow** (`tag` input ile `latest` dışında bir tag verilebilir)
 
-### Raspberry Pi (Multi-arch Images)
-Manuel job, şu platformları build eder:
-- `linux/arm64` (Raspberry Pi 64-bit)
-- `linux/arm/v7` (Raspberry Pi OS 32-bit)
+Build edilen platformlar:
 - `linux/amd64` (x86_64)
+- `linux/arm64` (Raspberry Pi 4/5 64-bit)
 
-GHCR image isimleri:
-- `ghcr.io/<owner>/<repo>-backend:<tag>`
-- `ghcr.io/<owner>/<repo>-frontend:<tag>`
+GHCR imaj isimleri:
+- `ghcr.io/lutfullahkabalak/zikir-hatmi-backend:<tag>`
+- `ghcr.io/lutfullahkabalak/zikir-hatmi-frontend:<tag>`
 
 ## Portainer / Üretim (GHCR Imajları)
 Üretim ortamında (örn. Raspberry Pi üstünde Portainer) imajları build etmek yerine GHCR'den çekmek için `docker-compose.portainer.yml` kullanılabilir.
 
-Portainer → **Stacks** → **Add stack** → **Repository** veya **Web editor** ile bu dosyayı yükleyin.
+### Ön koşul: Imajları GHCR'ye push et
+Portainer stack'i ilk kez deploy etmeden önce imajların GHCR'de olduğundan emin ol:
+
+1. Main'e bir commit (workflow otomatik tetiklenir), **veya** GitHub → Actions → **Docker Images** → **Run workflow**.
+2. Workflow tamamlandıktan sonra `https://github.com/lutfullahkabalak?tab=packages` adresinde `zikir-hatmi-backend` ve `zikir-hatmi-frontend` paketlerini görmelisin.
+3. **Paketleri public yap** (sadece ilk sefer gerekir, aksi halde Portainer `not found` hatası alır çünkü anonim pull yapamaz):
+   - Her paket için: **Package settings** → **Change visibility** → **Public**.
+   - Alternatif olarak private tutup Portainer'a GHCR credential eklemek istersen Portainer → **Registries** → **Add registry** → Custom (`ghcr.io` + username `lutfullahkabalak` + GitHub PAT `read:packages` scope'u).
+
+### Deploy
+Portainer → **Stacks** → **Add stack** → **Repository** veya **Web editor** ile `docker-compose.portainer.yml` dosyasını yükleyin.
 
 İsteğe bağlı environment variable'lar:
 - `IMAGE_TAG` (default: `latest`)
 - `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
 - `BACKEND_PORT` (default: `8998`), `FRONTEND_PORT` (default: `8999`)
-
-Imajlar:
-- `ghcr.io/lutfullahkabalak/zikir-hatmi-backend:<tag>`
-- `ghcr.io/lutfullahkabalak/zikir-hatmi-frontend:<tag>`
 
 Stack, servisleri sırayla ayağa kaldırır: önce `db` (healthcheck geçene kadar beklenir), sonra `backend` (healthcheck geçene kadar beklenir), en son `frontend`. Ayrıca backend DB'ye bağlanamazsa hemen düşmez, db hazır olana kadar geri çekilerek tekrar dener.
 
