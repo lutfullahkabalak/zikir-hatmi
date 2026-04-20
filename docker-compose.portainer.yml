@@ -1,0 +1,78 @@
+# Portainer / production stack for zikir-hatmi.
+#
+# Bu compose dosyasi imajlari build etmek yerine GHCR'den (GitHub Container
+# Registry) ceker. Portainer'da "Add stack" -> "Git repository" veya
+# "Web editor" ile bu dosyayi kullanabilirsin.
+#
+# Gerekirse asagidaki degiskenleri Portainer'in "Environment variables"
+# bolumunden override edebilirsin:
+#   IMAGE_TAG           -> kullanilacak imaj tag'i (default: latest)
+#   POSTGRES_DB         -> db ismi
+#   POSTGRES_USER       -> db kullanicisi
+#   POSTGRES_PASSWORD   -> db parolasi
+#   BACKEND_PORT        -> host tarafinda backend portu (default: 8998)
+#   FRONTEND_PORT       -> host tarafinda frontend portu (default: 8999)
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: zikir-hatmi-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-zikirhatmi}
+      POSTGRES_USER: ${POSTGRES_USER:-zikirhatmi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zikirhatmi}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 15s
+    volumes:
+      - zikirhatmi_db:/var/lib/postgresql/data
+    networks:
+      - zikirhatmi
+
+  backend:
+    image: ghcr.io/lutfullahkabalak/zikir-hatmi-backend:${IMAGE_TAG:-latest}
+    container_name: zikir-hatmi-backend
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      PORT: "8080"
+      DATABASE_URL: "postgres://${POSTGRES_USER:-zikirhatmi}:${POSTGRES_PASSWORD:-zikirhatmi}@db:5432/${POSTGRES_DB:-zikirhatmi}?sslmode=disable"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    ports:
+      - "${BACKEND_PORT:-8998}:8080"
+    networks:
+      - zikirhatmi
+
+  frontend:
+    image: ghcr.io/lutfullahkabalak/zikir-hatmi-frontend:${IMAGE_TAG:-latest}
+    container_name: zikir-hatmi-frontend
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      VITE_PROXY_TARGET: "http://backend:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8999}:5173"
+    networks:
+      - zikirhatmi
+
+volumes:
+  zikirhatmi_db:
+
+networks:
+  zikirhatmi:
+    driver: bridge
