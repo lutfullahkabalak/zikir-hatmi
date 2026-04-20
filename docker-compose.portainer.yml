@@ -4,6 +4,20 @@
 # Registry) ceker. Portainer'da "Add stack" -> "Git repository" veya
 # "Web editor" ile bu dosyayi kullanabilirsin.
 #
+# ON KOSUL:
+#   1) Imajlar GHCR'de yayinlanmis olmali. Bunun icin GitHub Actions'ta
+#      "Docker Images" workflow'u bir kez basariyla tamamlanmali (main'e
+#      push edilince otomatik calisir; ya da manuel tetiklenebilir).
+#   2) GHCR paketleri default olarak PRIVATE'tir. Portainer anonim olarak
+#      cekemez ve "not found" hatasi doner. Cozumler:
+#        a) Paketleri public yap:
+#           https://github.com/lutfullahkabalak?tab=packages ->
+#           her paket icin Package settings -> Change visibility -> Public
+#        b) Ya da Portainer'a GHCR registry credential ekle:
+#           Portainer -> Registries -> Add registry -> Custom
+#           URL: ghcr.io, username: lutfullahkabalak,
+#           password: read:packages scope'lu bir GitHub PAT
+#
 # Gerekirse asagidaki degiskenleri Portainer'in "Environment variables"
 # bolumunden override edebilirsin:
 #   IMAGE_TAG           -> kullanilacak imaj tag'i (default: latest)
