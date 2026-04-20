@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUsername } from './composables/useUsername'
+import { apiUrl } from './api'
 
 type CreateHatimResponse = {
   shareCode: string
@@ -67,7 +68,7 @@ watch(shareCode, async (code) => {
   headerTitle.value = ''
   if (!code) return
   try {
-    const res = await fetch(`/hatims/${code}`)
+    const res = await fetch(apiUrl(`/hatims/${code}`))
     if (res.ok) {
       const data = await res.json()
       headerTitle.value = data.title || ''
@@ -98,7 +99,7 @@ const submitCreate = async () => {
   createError.value = null
 
   try {
-    const response = await fetch('/hatims', {
+    const response = await fetch(apiUrl('/hatims'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -7,10 +7,12 @@ import ui from '@nuxt/ui/vite'
 export default defineConfig({
   plugins: [vue(), tailwindcss(), ui()],
   server: {
+    host: true,
     allowedHosts: [
-      'zikirhatmi.abapnews.tr',
       'localhost',
       '127.0.0.1',
+      'zikirhatmi.abapnews.tr',
+      '.abapnews.info',
     ],
     proxy: {
       '/hatims': {

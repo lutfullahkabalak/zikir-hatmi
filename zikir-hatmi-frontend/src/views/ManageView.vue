@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { apiUrl } from '../api'
 
 type HatimSummary = {
   shareCode: string
@@ -74,7 +75,7 @@ const loadHatims = async () => {
   errorMessage.value = null
 
   try {
-    const response = await fetch('/hatims')
+    const response = await fetch(apiUrl('/hatims'))
     if (!response.ok) {
       errorMessage.value = 'Hatimler alınamadı.'
       return
@@ -99,7 +100,7 @@ const saveHatim = async (shareCode: string) => {
   errorMessage.value = null
 
   try {
-    const response = await fetch(`/hatims/${shareCode}`, {
+    const response = await fetch(apiUrl(`/hatims/${shareCode}`), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -141,7 +142,7 @@ const deleteHatim = async (shareCode: string) => {
   errorMessage.value = null
 
   try {
-    const response = await fetch(`/hatims/${shareCode}`, {
+    const response = await fetch(apiUrl(`/hatims/${shareCode}`), {
       method: 'DELETE',
     })
 

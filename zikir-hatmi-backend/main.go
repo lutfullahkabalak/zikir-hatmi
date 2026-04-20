@@ -590,6 +590,70 @@ func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]string{"error": message})
 }
 
+// withCORS wraps the given handler with permissive-but-configurable CORS headers.
+// ALLOWED_ORIGINS env accepts a comma-separated list. Empty or "*" allows any origin.
+func withCORS(next http.Handler, allowedOriginsEnv string) http.Handler {
+	raw := strings.TrimSpace(allowedOriginsEnv)
+	allowAll := raw == "" || raw == "*"
+
+	var allowList []string
+	if !allowAll {
+		for _, item := range strings.Split(raw, ",") {
+			if trimmed := strings.TrimSpace(item); trimmed != "" {
+				allowList = append(allowList, trimmed)
+			}
+		}
+		if len(allowList) == 0 {
+			allowAll = true
+		}
+	}
+
+	isAllowed := func(origin string) bool {
+		if origin == "" {
+			return false
+		}
+		for _, allowed := range allowList {
+			if origin == allowed {
+				return true
+			}
+		}
+		return false
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+
+		if allowAll {
+			if origin != "" {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Vary", "Origin")
+			} else {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+			}
+		} else if isAllowed(origin) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
+		}
+
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+
+		reqHeaders := r.Header.Get("Access-Control-Request-Headers")
+		if reqHeaders == "" {
+			reqHeaders = "Content-Type, Authorization"
+		}
+		w.Header().Set("Access-Control-Allow-Headers", reqHeaders)
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
@@ -612,7 +676,7 @@ func main() {
 	srv := &http.Server{
 		Addr:              ":" + port,
 		ReadHeaderTimeout: 5 * time.Second,
-		Handler:           registerRoutes(hubs, db),
+		Handler:           withCORS(registerRoutes(hubs, db), os.Getenv("ALLOWED_ORIGINS")),
 	}
 
 	go func() {

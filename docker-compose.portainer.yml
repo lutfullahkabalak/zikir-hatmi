@@ -26,6 +26,13 @@
 #   POSTGRES_PASSWORD   -> db parolasi
 #   BACKEND_PORT        -> host tarafinda backend portu (default: 8998)
 #   FRONTEND_PORT       -> host tarafinda frontend portu (default: 8999)
+#   ALLOWED_ORIGINS     -> backend CORS whitelist, virgul ile ayrilmis
+#                          (default: *). Ornek:
+#                          "https://zikirhatmi.abapnews.info,https://zikirhatmiapi.abapnews.info"
+#   VITE_API_BASE       -> frontend'in API icin kullanacagi mutlak URL.
+#                          Backend ayri bir subdomain altindaysa set et, orn:
+#                          "https://zikirhatmiapi.abapnews.info"
+#                          Bos birakilirsa frontend relative path ile ayni origin'e istek yapar.
 
 services:
   db:
@@ -55,6 +62,7 @@ services:
     environment:
       PORT: "8080"
       DATABASE_URL: "postgres://${POSTGRES_USER:-zikirhatmi}:${POSTGRES_PASSWORD:-zikirhatmi}@db:5432/${POSTGRES_DB:-zikirhatmi}?sslmode=disable"
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-*}"
     depends_on:
       db:
         condition: service_healthy
@@ -76,6 +84,7 @@ services:
     pull_policy: always
     environment:
       VITE_PROXY_TARGET: "http://backend:8080"
+      VITE_API_BASE: "${VITE_API_BASE:-}"
     depends_on:
       backend:
         condition: service_healthy

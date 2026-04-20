@@ -1,4 +1,5 @@
 import { onBeforeUnmount, ref, watch, type Ref } from 'vue'
+import { wsUrl } from '../api'
 
 export type PresenceUser = { id: string; name: string }
 
@@ -12,10 +13,8 @@ type ClientMessage =
   | { type: 'hello'; name?: string }
   | { type: 'set_name'; name?: string }
 
-const getSocketUrl = (hatimId: string, token: string) => {
-  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  return `${protocol}://${window.location.host}/ws/${hatimId}?token=${encodeURIComponent(token)}`
-}
+const getSocketUrl = (hatimId: string, token: string) =>
+  wsUrl(`/ws/${hatimId}?token=${encodeURIComponent(token)}`)
 
 type ZikirSocketOptions = {
   hatimId: Ref<string | null | undefined>

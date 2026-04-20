@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { apiUrl } from '../api'
 
 type JoinResponse = {
   token: string
@@ -25,7 +26,7 @@ const submit = async () => {
   errorMessage.value = null
 
   try {
-    const response = await fetch(`/hatims/${shareCode.value}/join`, {
+    const response = await fetch(apiUrl(`/hatims/${shareCode.value}/join`), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: password.value }),

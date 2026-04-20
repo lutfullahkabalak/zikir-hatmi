@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUsername } from '../composables/useUsername'
 import { useZikirSocket } from '../composables/useZikirSocket'
+import { apiUrl } from '../api'
 
 type HatimStateResponse = {
   shareCode: string
@@ -88,7 +89,7 @@ const loadHatim = async () => {
   disconnect()
 
   try {
-    const response = await fetch(`/hatims/${shareCode.value}`)
+    const response = await fetch(apiUrl(`/hatims/${shareCode.value}`))
     if (!response.ok) {
       if (response.status === 404) {
         errorMessage.value = 'Hatim bulunamadı.'
@@ -118,7 +119,7 @@ const loadHatim = async () => {
     }
 
     joinLoading.value = true
-    const joinResponse = await fetch(`/hatims/${shareCode.value}/join`, {
+    const joinResponse = await fetch(apiUrl(`/hatims/${shareCode.value}/join`), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
