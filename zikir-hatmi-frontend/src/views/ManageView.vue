@@ -111,8 +111,16 @@ const loadContributorsFor = async (shareCode: string) => {
   }
 }
 
-const refreshContributors = async (shareCodes: string[]) => {
-  await Promise.all(shareCodes.map((code) => loadContributorsFor(code)))
+const refreshContributors = async (shareCodes: string[], concurrency = 4) => {
+  const queue = [...shareCodes]
+  const workers = Array.from({ length: Math.max(1, concurrency) }, async () => {
+    while (queue.length) {
+      const code = queue.shift()
+      if (!code) return
+      await loadContributorsFor(code)
+    }
+  })
+  await Promise.all(workers)
 }
 
 const loadHatims = async () => {
@@ -128,12 +136,17 @@ const loadHatims = async () => {
     const data = (await response.json()) as HatimSummary[]
     hydrateEditState(data)
     items.value = data
-    await refreshContributors(data.map((item) => item.shareCode))
   } catch {
     errorMessage.value = 'Hatimler alınamadı.'
   } finally {
     loading.value = false
   }
+
+  // Contributors yüklemesi ilk render'ı bloklamasın.
+  // Mobilde çok sayıda hatim varsa N+1 isteklerin hepsini beklemek sayfayı "geç açılıyor" gibi hissettiriyor.
+  void refreshContributors(items.value.map((item) => item.shareCode)).catch(() => {
+    // ignore: contributors opsiyonel
+  })
 }
 
 const saveHatim = async (shareCode: string) => {

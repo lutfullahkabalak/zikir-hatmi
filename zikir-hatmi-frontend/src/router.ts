@@ -1,8 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from './views/HomeView.vue'
-import HatimView from './views/HatimView.vue'
-import JoinView from './views/JoinView.vue'
-import ManageView from './views/ManageView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -10,24 +6,24 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: () => import('./views/HomeView.vue'),
     },
     {
       path: '/h/:shareCode',
       name: 'hatim',
-      component: HatimView,
+      component: () => import('./views/HatimView.vue'),
       props: true,
     },
     {
       path: '/h/:shareCode/join',
       name: 'hatim-join',
-      component: JoinView,
+      component: () => import('./views/JoinView.vue'),
       props: true,
     },
     {
       path: '/y',
       name: 'manage',
-      component: ManageView,
+      component: () => import('./views/ManageView.vue'),
     },
     {
       path: '/:pathMatch(.*)*',
