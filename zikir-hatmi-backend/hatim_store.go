@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base32"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -163,6 +165,9 @@ func incrementHatim(ctx context.Context, pool *pgxpool.Pool, shareCode string, a
 	if amount <= 0 {
 		amount = 1
 	}
+	if amount > 1000 {
+		amount = 1000
+	}
 
 	var count int
 	var target int
@@ -181,6 +186,116 @@ func incrementHatim(ctx context.Context, pool *pgxpool.Pool, shareCode string, a
 	}
 
 	return count, target, count >= target, nil
+}
+
+func logParticipantEntry(ctx context.Context, pool *pgxpool.Pool, shareCode, participantToken, displayName string) error {
+	cmd, err := pool.Exec(ctx, `
+		INSERT INTO hatim_participant_log (id, hatim_id, participant_token, kind, display_name, previous_name)
+		SELECT $1, h.id, $2, 'entry', $3, NULL
+		FROM hatims h
+		WHERE h.share_code = $4
+	`, uuid.New(), participantToken, displayName, shareCode)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return errHatimNotFound
+	}
+	return nil
+}
+
+func logParticipantRename(ctx context.Context, pool *pgxpool.Pool, shareCode, participantToken, fromName, toName string) error {
+	cmd, err := pool.Exec(ctx, `
+		INSERT INTO hatim_participant_log (id, hatim_id, participant_token, kind, display_name, previous_name)
+		SELECT $1, h.id, $2, 'rename', $3, $4
+		FROM hatims h
+		WHERE h.share_code = $5
+	`, uuid.New(), participantToken, toName, fromName, shareCode)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return errHatimNotFound
+	}
+	return nil
+}
+
+type hatimParticipantEvent struct {
+	Kind string    `json:"kind"`
+	Name string    `json:"name,omitempty"`
+	From string    `json:"from,omitempty"`
+	To   string    `json:"to,omitempty"`
+	At   time.Time `json:"at"`
+}
+
+type hatimContributor struct {
+	PublicID string                 `json:"publicId"`
+	Events   []hatimParticipantEvent `json:"events"`
+}
+
+func contributorPublicID(participantToken string) string {
+	sum := sha256.Sum256([]byte(participantToken))
+	return hex.EncodeToString(sum[:])[:8]
+}
+
+func listHatimContributors(ctx context.Context, pool *pgxpool.Pool, shareCode string) ([]hatimContributor, error) {
+	exists := pool.QueryRow(ctx, `SELECT 1 FROM hatims WHERE share_code = $1`, shareCode)
+	var one int
+	if err := exists.Scan(&one); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errHatimNotFound
+		}
+		return nil, err
+	}
+
+	rows, err := pool.Query(ctx, `
+		SELECT l.participant_token, l.kind, l.display_name, l.previous_name, l.created_at
+		FROM hatim_participant_log l
+		INNER JOIN hatims h ON h.id = l.hatim_id
+		WHERE h.share_code = $1
+		ORDER BY l.participant_token ASC, l.created_at ASC
+	`, shareCode)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	byToken := make(map[string][]hatimParticipantEvent)
+	order := make([]string, 0)
+	for rows.Next() {
+		var token, kind, displayName string
+		var previousName *string
+		var createdAt time.Time
+		if err := rows.Scan(&token, &kind, &displayName, &previousName, &createdAt); err != nil {
+			return nil, err
+		}
+		if _, seen := byToken[token]; !seen {
+			order = append(order, token)
+		}
+		ev := hatimParticipantEvent{Kind: kind, At: createdAt}
+		switch kind {
+		case "entry":
+			ev.Name = displayName
+		case "rename":
+			ev.To = displayName
+			if previousName != nil {
+				ev.From = *previousName
+			}
+		}
+		byToken[token] = append(byToken[token], ev)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	out := make([]hatimContributor, 0, len(order))
+	for _, token := range order {
+		out = append(out, hatimContributor{
+			PublicID: contributorPublicID(token),
+			Events:   byToken[token],
+		})
+	}
+	return out, nil
 }
 
 func listHatims(ctx context.Context, pool *pgxpool.Pool) ([]hatimSummary, error) {

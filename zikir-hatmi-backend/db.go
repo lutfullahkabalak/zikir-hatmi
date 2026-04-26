@@ -98,6 +98,37 @@ func ensureSchema(ctx context.Context, pool *pgxpool.Pool) error {
 			ALTER TABLE hatims ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT '';
 		EXCEPTION WHEN others THEN NULL;
 		END $$;
+
+		CREATE TABLE IF NOT EXISTS hatim_contribution_events (
+			id UUID PRIMARY KEY,
+			hatim_id UUID NOT NULL REFERENCES hatims(id) ON DELETE CASCADE,
+			participant_token TEXT NOT NULL,
+			display_name TEXT NOT NULL,
+			amount INT NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		);
+
+		CREATE INDEX IF NOT EXISTS hatim_contribution_events_hatim_id_idx
+			ON hatim_contribution_events (hatim_id);
+
+		CREATE INDEX IF NOT EXISTS hatim_contribution_events_hatim_token_idx
+			ON hatim_contribution_events (hatim_id, participant_token);
+
+		CREATE TABLE IF NOT EXISTS hatim_participant_log (
+			id UUID PRIMARY KEY,
+			hatim_id UUID NOT NULL REFERENCES hatims(id) ON DELETE CASCADE,
+			participant_token TEXT NOT NULL,
+			kind TEXT NOT NULL CHECK (kind IN ('entry', 'rename')),
+			display_name TEXT NOT NULL,
+			previous_name TEXT,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		);
+
+		CREATE INDEX IF NOT EXISTS hatim_participant_log_hatim_id_idx
+			ON hatim_participant_log (hatim_id);
+
+		CREATE INDEX IF NOT EXISTS hatim_participant_log_hatim_token_idx
+			ON hatim_participant_log (hatim_id, participant_token);
 	`)
 	return err
 }

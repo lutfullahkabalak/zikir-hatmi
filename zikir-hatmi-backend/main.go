@@ -31,8 +31,10 @@ type hub struct {
 }
 
 type clientInfo struct {
-	id   string
-	name string
+	id               string
+	name             string
+	participantToken string
+	loggedEntry      bool
 }
 
 type presenceUser struct {
@@ -71,9 +73,9 @@ func normalizeName(name string) string {
 	return name
 }
 
-func (h *hub) add(conn *websocket.Conn) {
+func (h *hub) add(conn *websocket.Conn, participantToken string) {
 	h.mu.Lock()
-	h.clients[conn] = &clientInfo{id: randomID(), name: ""}
+	h.clients[conn] = &clientInfo{id: randomID(), name: "", participantToken: participantToken, loggedEntry: false}
 	h.mu.Unlock()
 }
 
@@ -84,13 +86,56 @@ func (h *hub) remove(conn *websocket.Conn) {
 	_ = conn.Close()
 }
 
-func (h *hub) setClientName(conn *websocket.Conn, name string) {
-	name = normalizeName(name)
+func (h *hub) applyClientDisplayName(ctx context.Context, conn *websocket.Conn, rawName string) error {
+	newNorm := normalizeName(rawName)
+	newDisp := newNorm
+	if newDisp == "" {
+		newDisp = "Misafir"
+	}
+
+	h.mu.Lock()
+	info, ok := h.clients[conn]
+	if !ok {
+		h.mu.Unlock()
+		return errors.New("client not registered")
+	}
+	oldNorm := info.name
+	oldDisp := oldNorm
+	if oldDisp == "" {
+		oldDisp = "Misafir"
+	}
+	token := info.participantToken
+	entryLogged := info.loggedEntry
+	h.mu.Unlock()
+
+	if token == "" {
+		return errors.New("missing participant token")
+	}
+
+	if !entryLogged {
+		if err := logParticipantEntry(ctx, h.db, h.shareCode, token, newDisp); err != nil {
+			return err
+		}
+		h.mu.Lock()
+		if info, ok := h.clients[conn]; ok {
+			info.loggedEntry = true
+			info.name = newNorm
+		}
+		h.mu.Unlock()
+		return nil
+	}
+
+	if oldDisp != newDisp {
+		if err := logParticipantRename(ctx, h.db, h.shareCode, token, oldDisp, newDisp); err != nil {
+			return err
+		}
+	}
 	h.mu.Lock()
 	if info, ok := h.clients[conn]; ok {
-		info.name = name
+		info.name = newNorm
 	}
 	h.mu.Unlock()
+	return nil
 }
 
 func (h *hub) presenceSnapshot() []presenceUser {
@@ -149,12 +194,19 @@ func (h *hub) setState(count int, target int) {
 	h.mu.Unlock()
 }
 
-func (h *hub) increment(ctx context.Context, amount int) (int, int, bool, error) {
+func (h *hub) increment(ctx context.Context, conn *websocket.Conn, amount int) (int, int, bool, error) {
 	if amount <= 0 {
 		amount = 1
 	}
 	if amount > 1000 {
 		amount = 1000
+	}
+
+	h.mu.RLock()
+	_, ok := h.clients[conn]
+	h.mu.RUnlock()
+	if !ok {
+		return 0, 0, false, errors.New("client not registered")
 	}
 
 	count, target, completed, err := incrementHatim(ctx, h.db, h.shareCode, amount)
@@ -449,6 +501,27 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 			return
 		}
 
+		if len(parts) == 2 && parts[1] == "contributors" {
+			if r.Method != http.MethodGet {
+				writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+				return
+			}
+
+			contributors, err := listHatimContributors(r.Context(), db, shareCode)
+			if err != nil {
+				if errors.Is(err, errHatimNotFound) {
+					writeError(w, http.StatusNotFound, "hatim not found")
+					return
+				}
+				log.Printf("list contributors error: %v", err)
+				writeError(w, http.StatusInternalServerError, "unable to list contributors")
+				return
+			}
+
+			writeJSON(w, http.StatusOK, map[string][]hatimContributor{"contributors": contributors})
+			return
+		}
+
 		writeError(w, http.StatusNotFound, "not found")
 	})
 
@@ -493,7 +566,7 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 			return
 		}
 
-		hb.add(conn)
+		hb.add(conn, token)
 		log.Printf("client connected: %s", conn.RemoteAddr())
 		hb.broadcastPresence()
 
@@ -542,14 +615,16 @@ func registerRoutes(hubs *hubStore, db *pgxpool.Pool) http.Handler {
 			case "increment":
 				// handled below
 			case "hello", "set_name":
-				hb.setClientName(conn, incoming.Name)
+				if err := hb.applyClientDisplayName(r.Context(), conn, incoming.Name); err != nil {
+					log.Printf("participant log error: %v", err)
+				}
 				hb.broadcastPresence()
 				continue
 			default:
 				continue
 			}
 
-			count, target, completed, err := hb.increment(r.Context(), incoming.Amount)
+			count, target, completed, err := hb.increment(r.Context(), conn, incoming.Amount)
 			if err != nil {
 				log.Printf("increment error: %v", err)
 				continue

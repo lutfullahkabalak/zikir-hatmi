@@ -12,7 +12,21 @@ type HatimSummary = {
   updatedAt: string
 }
 
+type ParticipantEvent = {
+  kind: string
+  name?: string
+  from?: string
+  to?: string
+  at: string
+}
+
+type Contributor = {
+  publicId: string
+  events: ParticipantEvent[]
+}
+
 const items = ref<HatimSummary[]>([])
+const contributorsByCode = ref<Record<string, Contributor[]>>({})
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const savingCode = ref<string | null>(null)
@@ -58,6 +72,16 @@ const formatDate = (value: string) => {
 
 const shareLink = (shareCode: string) => `${window.location.origin}/h/${shareCode}`
 
+const eventLabel = (e: ParticipantEvent) => {
+  if (e.kind === 'entry') {
+    return `Giriş: ${e.name ?? '—'}`
+  }
+  if (e.kind === 'rename') {
+    return `İsim: ${e.from ?? '—'} → ${e.to ?? '—'}`
+  }
+  return e.kind
+}
+
 const hydrateEditState = (source: HatimSummary[]) => {
   const next: Record<string, { title: string; count: number; target: number }> = {}
   for (const item of source) {
@@ -68,6 +92,27 @@ const hydrateEditState = (source: HatimSummary[]) => {
     }
   }
   editState.value = next
+}
+
+const loadContributorsFor = async (shareCode: string) => {
+  try {
+    const response = await fetch(apiUrl(`/hatims/${encodeURIComponent(shareCode)}/contributors`))
+    if (!response.ok) {
+      contributorsByCode.value = { ...contributorsByCode.value, [shareCode]: [] }
+      return
+    }
+    const data = (await response.json()) as { contributors?: Contributor[] }
+    contributorsByCode.value = {
+      ...contributorsByCode.value,
+      [shareCode]: Array.isArray(data.contributors) ? data.contributors : [],
+    }
+  } catch {
+    contributorsByCode.value = { ...contributorsByCode.value, [shareCode]: [] }
+  }
+}
+
+const refreshContributors = async (shareCodes: string[]) => {
+  await Promise.all(shareCodes.map((code) => loadContributorsFor(code)))
 }
 
 const loadHatims = async () => {
@@ -83,6 +128,7 @@ const loadHatims = async () => {
     const data = (await response.json()) as HatimSummary[]
     hydrateEditState(data)
     items.value = data
+    await refreshContributors(data.map((item) => item.shareCode))
   } catch {
     errorMessage.value = 'Hatimler alınamadı.'
   } finally {
@@ -155,6 +201,9 @@ const deleteHatim = async (shareCode: string) => {
     const copy = { ...editState.value }
     delete copy[shareCode]
     editState.value = copy
+    const contribCopy = { ...contributorsByCode.value }
+    delete contribCopy[shareCode]
+    contributorsByCode.value = contribCopy
   } catch {
     errorMessage.value = 'Hatim silinemedi.'
   } finally {
@@ -271,6 +320,33 @@ onMounted(() => {
           <p class="text-xs text-slate-700/80 dark:text-white/50">
             Oluşturulma: {{ formatDate(item.createdAt) }} · Link: {{ shareLink(item.shareCode) }}
           </p>
+
+          <div class="border-t border-slate-200/60 pt-3 dark:border-white/10">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-600 dark:text-white/55">
+              Katılımcı günlüğü
+            </p>
+            <p
+              v-if="!(contributorsByCode[item.shareCode]?.length)"
+              class="mt-2 text-xs text-slate-600 dark:text-white/50"
+            >
+              Henüz giriş veya isim değişikliği kaydı yok.
+            </p>
+            <ul v-else class="mt-2 space-y-3">
+              <li
+                v-for="c in contributorsByCode[item.shareCode]"
+                :key="c.publicId"
+                class="text-sm text-slate-800 dark:text-white/90"
+              >
+                <span class="font-mono text-xs text-slate-500 dark:text-white/45">{{ c.publicId }}</span>
+                <ul class="mt-1 list-inside list-disc space-y-0.5 pl-1 text-xs text-slate-700 dark:text-white/70">
+                  <li v-for="(ev, idx) in c.events" :key="idx">
+                    <span class="text-slate-500 dark:text-white/45">{{ formatDate(ev.at) }}</span>
+                    · {{ eventLabel(ev) }}
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
         </div>
       </UCard>
     </div>
