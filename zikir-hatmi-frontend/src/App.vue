@@ -35,6 +35,8 @@ const shareLink = computed(() =>
   shareCode.value ? `${window.location.origin}/h/${shareCode.value}` : ''
 )
 
+const isMinimalLayout = computed(() => Boolean(route.meta?.minimal))
+
 const canShare = computed(() => shareCode.value.length > 0)
 
 const menuItems = computed(() => [
@@ -145,7 +147,10 @@ const clearUsername = () => {
 <template>
   <UApp class="ramadan-app min-h-dvh bg-transparent">
     <main class="relative flex min-h-dvh flex-col">
-      <header class="sticky top-0 z-20 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-4 py-4">
+      <header
+        v-if="!isMinimalLayout"
+        class="sticky top-0 z-20 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-4 py-4"
+      >
         <div class="w-9"></div>
 
         <p

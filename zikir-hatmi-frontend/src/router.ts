@@ -21,6 +21,13 @@ const router = createRouter({
       props: true,
     },
     {
+      path: '/h/:shareCode/liste',
+      name: 'hatim-list',
+      component: () => import('./views/HatimListView.vue'),
+      props: true,
+      meta: { minimal: true },
+    },
+    {
       path: '/y',
       name: 'manage',
       component: () => import('./views/ManageView.vue'),
