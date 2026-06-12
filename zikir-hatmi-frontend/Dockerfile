@@ -1,3 +1,4 @@
+# Multi-stage: Node build + nginx serve
 FROM node:20-alpine AS build
 
 WORKDIR /app
