@@ -29,10 +29,8 @@
 #   ALLOWED_ORIGINS     -> backend CORS whitelist, virgul ile ayrilmis
 #                          (default: *). Ornek:
 #                          "https://zikirhatmi.abapnews.info,https://zikirhatmiapi.abapnews.info"
-#   VITE_API_BASE       -> frontend'in API icin kullanacagi mutlak URL.
-#                          Backend ayri bir subdomain altindaysa set et, orn:
-#                          "https://zikirhatmiapi.abapnews.info"
-#                          Bos birakilirsa frontend relative path ile ayni origin'e istek yapar.
+# Not: Frontend statik prod build + nginx ile servis edilir.
+# API (/hatims) ve WebSocket (/ws) istekleri nginx tarafindan backend'e proxy'lenir.
 
 services:
   db:
@@ -82,14 +80,11 @@ services:
     container_name: zikir-hatmi-frontend
     restart: unless-stopped
     pull_policy: always
-    environment:
-      VITE_PROXY_TARGET: "http://backend:8080"
-      VITE_API_BASE: "${VITE_API_BASE:-}"
     depends_on:
       backend:
         condition: service_healthy
     ports:
-      - "${FRONTEND_PORT:-8999}:5173"
+      - "${FRONTEND_PORT:-8999}:80"
     networks:
       - zikirhatmi
 

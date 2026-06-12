@@ -7,6 +7,7 @@ Bu repo iki parçadan oluşur:
 ## Klasörler
 - `zikir-hatmi-backend/`
 - `zikir-hatmi-frontend/`
+- `zikir-hatmi-ios/` — Native SwiftUI iOS uygulaması
 
 ## Hızlı Başlangıç (Docker Compose)
 Gereksinim: Docker Desktop
@@ -47,7 +48,20 @@ npm ci
 npm run dev
 ```
 
-> Frontend, geliştirme modunda `/hatims` ve `/ws` isteklerini Vite proxy ile backend’e yönlendirir.
+> Frontend, geliştirme modunda `/hatims` ve `/ws` isteklerini Vite proxy ile backend'e yönlendirir.
+
+## iOS (Native)
+SwiftUI uygulaması: `zikir-hatmi-ios/`
+
+```bash
+cd zikir-hatmi-ios
+open ZikirHatmi.xcodeproj
+```
+
+Production API: `https://zikirhatmiapi.abapnews.info`  
+Universal Links: `https://zikirhatmi.abapnews.tr/h/{shareCode}`
+
+Ayrıntılar için [zikir-hatmi-ios/README.md](zikir-hatmi-ios/README.md).
 
 ## Uç Noktalar (Backend)
 - `POST /hatims` → hatim oluşturur (opsiyonel şifre + başlık)

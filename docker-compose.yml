@@ -41,14 +41,11 @@ services:
       context: ./zikir-hatmi-frontend
     container_name: zikir-hatmi-frontend
     restart: unless-stopped
-    environment:
-      # Local dev: proxy API + WebSocket to the backend service inside the compose network.
-      VITE_PROXY_TARGET: "http://backend:8080"
     depends_on:
       backend:
         condition: service_healthy
     ports:
-      - "8999:5173"
+      - "8999:80"
 
 volumes:
   zikirhatmi_db:

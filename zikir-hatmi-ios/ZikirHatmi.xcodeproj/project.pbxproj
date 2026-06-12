@@ -1,0 +1,470 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00FE77384006944F803025A0 /* JoinViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A01781D439586FE45AD1A2C /* JoinViewModel.swift */; };
+		07A992B0924F52304B879A69 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE7DB3DE43AEAADD1AAD9E1F /* HapticService.swift */; };
+		1C5B568ACE083D3E073084A2 /* BulkIncrementSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC552CDE9C060173C419C7FC /* BulkIncrementSheet.swift */; };
+		28F003669715E9D5671270D5 /* JoinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE93EEB94AC4E82F59A06447 /* JoinView.swift */; };
+		37988A5FF49F63963F99D4CE /* DeepLinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDED06683070E989606F3BC0 /* DeepLinkParser.swift */; };
+		384641C746FF18F1AE191FD9 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1526266F2B267A258FB42DA8 /* HomeView.swift */; };
+		58758EB5FBFBAB84E87B42FB /* WebSocketMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C4BAE61698D2F657584D60 /* WebSocketMessages.swift */; };
+		5A03D8F50698F3C059AD6420 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9210C1ECAA973DD23EEF8D89 /* AppConfig.swift */; };
+		60DB036B54503C278237A376 /* Sora-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D6C72705F3654DEDD8A06260 /* Sora-Variable.ttf */; };
+		6282285990FB2CB23830A61B /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4005BACA724F55652D39CC46 /* APIClient.swift */; };
+		8DDDB938DCA81A1224A838BD /* PresenceSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F727210DD4E3F5C4B2A32747 /* PresenceSheet.swift */; };
+		9426CB7C76D6378F29436D97 /* CreateHatimSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F6710E33C71A293ABE5474 /* CreateHatimSheet.swift */; };
+		96A7B4813DED044DED1FFB31 /* ZikirWebSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1404A650F9FD4C8F493963A /* ZikirWebSocket.swift */; };
+		A0B9A80CE9D99DDEF3977083 /* RamadanTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB63BAAB3FD012BD192FA626 /* RamadanTheme.swift */; };
+		AEA412952805D8C3B0976BDB /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2EAF480E869662BBA262F1 /* GlassCard.swift */; };
+		BDE95A66104145FDBCA941C5 /* TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22A5294C99A36A174F0C1CA8 /* TokenStore.swift */; };
+		C0FDC9D265F0B6AB544ED9B4 /* UsernameSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B458B110644876EE1E91EB /* UsernameSheet.swift */; };
+		C2528917447E76CD2C2A53C5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 72627F3A5E9F87790C6E0F72 /* PrivacyInfo.xcprivacy */; };
+		C45F36D333B9512C270CF9F4 /* Font+Sora.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F6406255B2A539E102E3F81 /* Font+Sora.swift */; };
+		C64C50F6CBC47E918D118D1A /* ProgressRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E07AFE1F052B578017EAAA10 /* ProgressRingView.swift */; };
+		C8E8D47AA4DD9051B84F9E88 /* HatimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B470DA9387C3041CD64F3AA /* HatimView.swift */; };
+		CFE9C7E11C3B7D9FE6C48721 /* UserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4ED3DF20A64D9ECBC4D5FCE /* UserPreferences.swift */; };
+		DC634B5B8E449DFCB1358E45 /* HatimModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3A4419ED9E901E7C5B4331 /* HatimModels.swift */; };
+		F1557E0058389F319BE626B6 /* HatimViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEABDBF24D2E828BF91687FD /* HatimViewModel.swift */; };
+		F9D897D0F2CA4A297FEDCD1F /* ZikirHatmiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEA2E16752D273352B5F76BE /* ZikirHatmiApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0C5A6C565C06F0F6C5A3C376 /* ZikirHatmi.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ZikirHatmi.entitlements; sourceTree = "<group>"; };
+		0D3A4419ED9E901E7C5B4331 /* HatimModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HatimModels.swift; sourceTree = "<group>"; };
+		1526266F2B267A258FB42DA8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		22A5294C99A36A174F0C1CA8 /* TokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenStore.swift; sourceTree = "<group>"; };
+		33C4BAE61698D2F657584D60 /* WebSocketMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketMessages.swift; sourceTree = "<group>"; };
+		3A01781D439586FE45AD1A2C /* JoinViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinViewModel.swift; sourceTree = "<group>"; };
+		3D2EAF480E869662BBA262F1 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
+		4005BACA724F55652D39CC46 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		4B470DA9387C3041CD64F3AA /* HatimView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HatimView.swift; sourceTree = "<group>"; };
+		4F6406255B2A539E102E3F81 /* Font+Sora.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Sora.swift"; sourceTree = "<group>"; };
+		72627F3A5E9F87790C6E0F72 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		9210C1ECAA973DD23EEF8D89 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		B4ED3DF20A64D9ECBC4D5FCE /* UserPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPreferences.swift; sourceTree = "<group>"; };
+		B763B5E8501ACEC130E0884E /* ZikirHatmi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ZikirHatmi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE93EEB94AC4E82F59A06447 /* JoinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinView.swift; sourceTree = "<group>"; };
+		BEA2E16752D273352B5F76BE /* ZikirHatmiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZikirHatmiApp.swift; sourceTree = "<group>"; };
+		CB63BAAB3FD012BD192FA626 /* RamadanTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RamadanTheme.swift; sourceTree = "<group>"; };
+		CC552CDE9C060173C419C7FC /* BulkIncrementSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkIncrementSheet.swift; sourceTree = "<group>"; };
+		D6C72705F3654DEDD8A06260 /* Sora-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sora-Variable.ttf"; sourceTree = "<group>"; };
+		D8F6710E33C71A293ABE5474 /* CreateHatimSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateHatimSheet.swift; sourceTree = "<group>"; };
+		D9B458B110644876EE1E91EB /* UsernameSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsernameSheet.swift; sourceTree = "<group>"; };
+		E07AFE1F052B578017EAAA10 /* ProgressRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressRingView.swift; sourceTree = "<group>"; };
+		E1404A650F9FD4C8F493963A /* ZikirWebSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZikirWebSocket.swift; sourceTree = "<group>"; };
+		EDED06683070E989606F3BC0 /* DeepLinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkParser.swift; sourceTree = "<group>"; };
+		EEABDBF24D2E828BF91687FD /* HatimViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HatimViewModel.swift; sourceTree = "<group>"; };
+		F727210DD4E3F5C4B2A32747 /* PresenceSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresenceSheet.swift; sourceTree = "<group>"; };
+		FE7DB3DE43AEAADD1AAD9E1F /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		2CC20DF42CD3C6F71C7FA7BE /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				956CA81F7148B931B02DB24A /* Fonts */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		384291A9592C325E322F4B45 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				4F6406255B2A539E102E3F81 /* Font+Sora.swift */,
+				CB63BAAB3FD012BD192FA626 /* RamadanTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		3901736C1D2D06C1E2F959D2 /* ZikirHatmi */ = {
+			isa = PBXGroup;
+			children = (
+				9210C1ECAA973DD23EEF8D89 /* AppConfig.swift */,
+				72627F3A5E9F87790C6E0F72 /* PrivacyInfo.xcprivacy */,
+				0C5A6C565C06F0F6C5A3C376 /* ZikirHatmi.entitlements */,
+				BEA2E16752D273352B5F76BE /* ZikirHatmiApp.swift */,
+				B003B27BFCF5F12F647ECEEB /* Models */,
+				2CC20DF42CD3C6F71C7FA7BE /* Resources */,
+				CF5BFD61BE120120F8231EFA /* Services */,
+				384291A9592C325E322F4B45 /* Theme */,
+				48EC05CE9F4BFECAD3F54222 /* ViewModels */,
+				970BAFDBF8984A55D6D590BB /* Views */,
+			);
+			path = ZikirHatmi;
+			sourceTree = "<group>";
+		};
+		48EC05CE9F4BFECAD3F54222 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				EEABDBF24D2E828BF91687FD /* HatimViewModel.swift */,
+				3A01781D439586FE45AD1A2C /* JoinViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		5CA73CB1F20DE29CB8867E6E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B763B5E8501ACEC130E0884E /* ZikirHatmi.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6216699F06497CCAC3593867 = {
+			isa = PBXGroup;
+			children = (
+				3901736C1D2D06C1E2F959D2 /* ZikirHatmi */,
+				5CA73CB1F20DE29CB8867E6E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		676257B55CDE682DFB953A3A /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				CC552CDE9C060173C419C7FC /* BulkIncrementSheet.swift */,
+				D8F6710E33C71A293ABE5474 /* CreateHatimSheet.swift */,
+				3D2EAF480E869662BBA262F1 /* GlassCard.swift */,
+				F727210DD4E3F5C4B2A32747 /* PresenceSheet.swift */,
+				E07AFE1F052B578017EAAA10 /* ProgressRingView.swift */,
+				D9B458B110644876EE1E91EB /* UsernameSheet.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		956CA81F7148B931B02DB24A /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				D6C72705F3654DEDD8A06260 /* Sora-Variable.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		970BAFDBF8984A55D6D590BB /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4B470DA9387C3041CD64F3AA /* HatimView.swift */,
+				1526266F2B267A258FB42DA8 /* HomeView.swift */,
+				BE93EEB94AC4E82F59A06447 /* JoinView.swift */,
+				676257B55CDE682DFB953A3A /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		B003B27BFCF5F12F647ECEEB /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				0D3A4419ED9E901E7C5B4331 /* HatimModels.swift */,
+				33C4BAE61698D2F657584D60 /* WebSocketMessages.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		CF5BFD61BE120120F8231EFA /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				4005BACA724F55652D39CC46 /* APIClient.swift */,
+				EDED06683070E989606F3BC0 /* DeepLinkParser.swift */,
+				FE7DB3DE43AEAADD1AAD9E1F /* HapticService.swift */,
+				22A5294C99A36A174F0C1CA8 /* TokenStore.swift */,
+				B4ED3DF20A64D9ECBC4D5FCE /* UserPreferences.swift */,
+				E1404A650F9FD4C8F493963A /* ZikirWebSocket.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CEA89FA0D21AB0985392D93D /* ZikirHatmi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DE700D1817F56FD2509054B3 /* Build configuration list for PBXNativeTarget "ZikirHatmi" */;
+			buildPhases = (
+				069378C2DD241B460287A75F /* Sources */,
+				247478BC4405497334C67A09 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ZikirHatmi;
+			packageProductDependencies = (
+			);
+			productName = ZikirHatmi;
+			productReference = B763B5E8501ACEC130E0884E /* ZikirHatmi.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A57455D27A3339700601A3B0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					CEA89FA0D21AB0985392D93D = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = DCB35789C5D58AC6452ED000 /* Build configuration list for PBXProject "ZikirHatmi" */;
+			developmentRegion = tr;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				tr,
+			);
+			mainGroup = 6216699F06497CCAC3593867;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 5CA73CB1F20DE29CB8867E6E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CEA89FA0D21AB0985392D93D /* ZikirHatmi */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		247478BC4405497334C67A09 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C2528917447E76CD2C2A53C5 /* PrivacyInfo.xcprivacy in Resources */,
+				60DB036B54503C278237A376 /* Sora-Variable.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		069378C2DD241B460287A75F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6282285990FB2CB23830A61B /* APIClient.swift in Sources */,
+				5A03D8F50698F3C059AD6420 /* AppConfig.swift in Sources */,
+				1C5B568ACE083D3E073084A2 /* BulkIncrementSheet.swift in Sources */,
+				9426CB7C76D6378F29436D97 /* CreateHatimSheet.swift in Sources */,
+				37988A5FF49F63963F99D4CE /* DeepLinkParser.swift in Sources */,
+				C45F36D333B9512C270CF9F4 /* Font+Sora.swift in Sources */,
+				AEA412952805D8C3B0976BDB /* GlassCard.swift in Sources */,
+				07A992B0924F52304B879A69 /* HapticService.swift in Sources */,
+				DC634B5B8E449DFCB1358E45 /* HatimModels.swift in Sources */,
+				C8E8D47AA4DD9051B84F9E88 /* HatimView.swift in Sources */,
+				F1557E0058389F319BE626B6 /* HatimViewModel.swift in Sources */,
+				384641C746FF18F1AE191FD9 /* HomeView.swift in Sources */,
+				28F003669715E9D5671270D5 /* JoinView.swift in Sources */,
+				00FE77384006944F803025A0 /* JoinViewModel.swift in Sources */,
+				8DDDB938DCA81A1224A838BD /* PresenceSheet.swift in Sources */,
+				C64C50F6CBC47E918D118D1A /* ProgressRingView.swift in Sources */,
+				A0B9A80CE9D99DDEF3977083 /* RamadanTheme.swift in Sources */,
+				BDE95A66104145FDBCA941C5 /* TokenStore.swift in Sources */,
+				CFE9C7E11C3B7D9FE6C48721 /* UserPreferences.swift in Sources */,
+				C0FDC9D265F0B6AB544ED9B4 /* UsernameSheet.swift in Sources */,
+				58758EB5FBFBAB84E87B42FB /* WebSocketMessages.swift in Sources */,
+				F9D897D0F2CA4A297FEDCD1F /* ZikirHatmiApp.swift in Sources */,
+				96A7B4813DED044DED1FFB31 /* ZikirWebSocket.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		872CD424218425605D6E0C57 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_ENTITLEMENTS = ZikirHatmi/ZikirHatmi.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ZikirHatmi/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.zikirhatmi.app;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		88CB7DEC8F1AD7150CFB1131 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A14892EE38B3FA89D3127B62 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E09E3E705A6A0BCCFC7E6F08 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_ENTITLEMENTS = ZikirHatmi/ZikirHatmi.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ZikirHatmi/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.zikirhatmi.app;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DCB35789C5D58AC6452ED000 /* Build configuration list for PBXProject "ZikirHatmi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				88CB7DEC8F1AD7150CFB1131 /* Debug */,
+				A14892EE38B3FA89D3127B62 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DE700D1817F56FD2509054B3 /* Build configuration list for PBXNativeTarget "ZikirHatmi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E09E3E705A6A0BCCFC7E6F08 /* Debug */,
+				872CD424218425605D6E0C57 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A57455D27A3339700601A3B0 /* Project object */;
+}
